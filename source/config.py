@@ -7,10 +7,14 @@ import datetime
 
 from utilities import encode #, decode
 import users
+import sys
+from pathlib import Path
 
 #database file name
 
-databaseFolder = users.parentPath / "data"
+parentPath = Path(sys._MEIPASS) if getattr(sys, "frozen", False) is True else Path(__file__).resolve().parent.parent
+
+databaseFolder = parentPath / "data"
 
 kanjiFile = databaseFolder / 'kanji_new_database.db' #(kanji text, JandE text, grade text, jlpt text, tags text, DandT text)
 kanaFile = databaseFolder / 'kana_database.db' #(kana text, english text, kanji text)
