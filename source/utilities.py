@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import colorchooser
 
+import resolution as res
+
 #create verticall scroll frames
 
 class ScrollingFrame:
@@ -11,20 +13,20 @@ class ScrollingFrame:
       self.master = master
       self.root = root
 
-      self.mainFrame_width = width
-      self.mainFrame_height = height if height >= 61 else 61
+      self.mainFrame_width = res.sx(width)
+      self.mainFrame_height = res.sy(height)
 
       self.bgColour = '#f0f0f0' if 'bg' not in kwargs else kwargs['bg']
       self.scrollingIncrement = 1 if 'increments' not in kwargs else (kwargs['increments'] if kwargs['increments'] >= 1 else 1)
 
-      self.scrollbar_ySpan = (self.mainFrame_height / 2) - 30
+      self.scrollbar_ySpan = res.sy((self.mainFrame_height / 2) - 30)
 
       #mainframe contains both the viewing frame and the scrollbar frame
       self.mainFrame = Frame(self.root, width = self.mainFrame_width, height = self.mainFrame_height, bg = self.bgColour)
 
-      self.viewFrame = Frame(self.mainFrame, width = self.mainFrame_width - 20, height = self.mainFrame_height, bg = self.bgColour)
+      self.viewFrame = Frame(self.mainFrame, width = self.mainFrame_width - res.sx(20), height = self.mainFrame_height, bg = self.bgColour)
 
-      self.scrollFrame = Frame(self.mainFrame, width = 20, height = self.mainFrame_height, bg = self.bgColour)
+      self.scrollFrame = Frame(self.mainFrame, width = res.sx(20), height = self.mainFrame_height, bg = self.bgColour)
 
       #viewing canvas will move in accordance to the scrollbar
       self.viewingCanvas = Canvas(self.viewFrame, width = self.mainFrame_width, height = self.mainFrame_height, bg = self.bgColour,
@@ -91,7 +93,7 @@ class ScrollingFrame:
       for num in range(amount + 1):
 
          self.button = Button(self.canvasFrame, text = f'button {num}')
-         self.button.grid(row = num, column = 0, padx = 370, pady = 15)
+         self.button.grid(row = num, column = 0, padx = res.rx(370), pady = res.ry(15))
 
    def resizeScrollWindow(self):
       self.master.update_idletasks()
@@ -207,16 +209,16 @@ class tags_Window:
       self.showTagsWindow = Frame(self.root, bg = '#ffffff')
       self.showTagsWindow.pack(pady = 5)
 
-      self.showTagsFrame = Frame(self.showTagsWindow, width = 401, height = 450, bg = '#131313')
+      self.showTagsFrame = Frame(self.showTagsWindow, width = res.rx(401), height = res.ry(450), bg = '#131313')
       self.showTagsFrame.grid_propagate(0)
-      self.showTagsFrame.grid(row = 0, column = 0, padx = 3, pady = 3)
+      self.showTagsFrame.grid(row = 0, column = 0, padx = res.rx(3), pady = res.ry(3))
 
       self.tagsDict = {}
       self.selectedTags = []
 
       #variable to check if there are no tags being shown on screen
       self.displayNone = False
-      self.noTagsLabel = Label(self.showTagsFrame, text = 'No such tags \n exist.', font = ('arial', 30), bg = '#131313', fg = '#4f4f4f')
+      self.noTagsLabel = Label(self.showTagsFrame, text = 'No such tags \n exist.', font = ('arial', res.ry(30)), bg = '#131313', fg = '#4f4f4f')
 
       for num, tag in enumerate(availableTags):
          text, hexColour = tag[0], tag[1]
@@ -224,37 +226,88 @@ class tags_Window:
          self.newTagPosition = self.display_tag(text, self.tagsDict[text], num)
 
       self.newTagsFrame = Frame(self.root, bg = '#1f2e1f')
-      self.newTagButton = Button(self.newTagsFrame, text = 'New Tag', font = ('arial', 18), width = 8, bg = '#004d00', fg = self.btnFg, state = DISABLED)
-      self.tagColourButton = Button(self.newTagsFrame, width = 2, bg = self.newTagColour, command = self.load_colour_chooser)
-      self.deleteTagButton = Button(self.newTagsFrame, text = u'\u274c', font = ('arial', 10), width = 2,
-                                    bg = self.btnFg, fg = '#6f0000', state = DISABLED)
+      self.newTagButton = Button(
+          self.newTagsFrame,
+          text='New Tag',
+          font=('arial', res.sy(18)),
+          width=res.sx(8),
+          bg='#004d00',
+          fg=self.btnFg,
+          state=DISABLED
+      )
+      self.tagColourButton = Button(
+          self.newTagsFrame,
+          width=res.sx(2),
+          bg=self.newTagColour,
+          command=self.load_colour_chooser
+      )
+      self.deleteTagButton = Button(
+          self.newTagsFrame,
+          text=u'\u274c',
+          font=('arial', res.sy(10)),
+          width=res.sx(2),
+          bg=self.btnFg,
+          fg='#6f0000',
+          state=DISABLED
+      )
 
-      self.searchTagsLabel = Label(self.newTagsFrame, text = 'Search Tag(s):', font = ('arial', 16), bg = '#1f2e1f', fg = self.btnFg)
-      self.searchTracker = StringVar(name = 'serachTracker')
+      self.searchTagsLabel = Label(
+          self.newTagsFrame,
+          text='Search Tag(s):',
+          font=('arial', res.sy(16)),
+          bg='#1f2e1f',
+          fg=self.btnFg
+      )
+      self.searchTracker = StringVar(name='serachTracker')
       self.searchTracker.trace_add('write', self.display_searched_tags)
-      self.searchTagEntry = Entry(self.newTagsFrame, font = ('arial', 22), width = 10, textvariable = self.searchTracker)
+      self.searchTagEntry = Entry(
+          self.newTagsFrame,
+          font=('arial', res.sy(22)),
+          width=res.sx(10),
+          textvariable=self.searchTracker
+      )
       self.searchTagEntry.focus_set()
 
-      self.textTracker = StringVar(name = 'textTracker')
+      self.textTracker = StringVar(name='textTracker')
       self.textTracker.trace_add('write', self.update_new_tag)
-      self.newTagEntry = Entry(self.newTagsFrame, width = 10, font = ('arial', 22), textvariable = self.textTracker)
+      self.newTagEntry = Entry(
+          self.newTagsFrame,
+          width=res.sx(10),
+          font=('arial', res.sy(22)),
+          textvariable=self.textTracker
+      )
 
-      self.newTagButton.grid(row = 0, column = 0, pady = 10, padx = 20)
-      self.newTagEntry.grid(row = 0, column = 1)
-      self.tagColourButton.grid(row = 0, column = 2, padx = 20)
-      self.deleteTagButton.grid(row = 1, column = 2)
-      self.searchTagsLabel.grid(row = 1, column = 0, pady = 10)
-      self.searchTagEntry.grid(row = 1, column = 1)
-      self.newTagsFrame.pack(pady = 5)
+      self.newTagButton.grid(row=0, column=0, pady=res.sy(10), padx=res.sx(20))
+      self.newTagEntry.grid(row=0, column=1)
+      self.tagColourButton.grid(row=0, column=2, padx=res.sx(20))
+      self.deleteTagButton.grid(row=1, column=2)
+      self.searchTagsLabel.grid(row=1, column=0, pady=res.sy(10))
+      self.searchTagEntry.grid(row=1, column=1)
+      self.newTagsFrame.pack(pady=res.sy(5))
 
-      self.returnFrame = Frame(self.root, bg = '#2b1f2e')
-      self.confirmButton = Button(self.returnFrame, text = 'Confirm', font = ('arial', 18), bg = '#2d2d53', fg = self.btnFg, width = 8,
-                                 command = lambda: self.exit('confirm'))
-      self.cancelButton = Button(self.returnFrame, text = 'Cancel', font = ('arial', 18), bg = '#532d2d', fg = self.btnFg, width = 8,
-                                 command = lambda: self.exit('cancel'))
+      self.returnFrame = Frame(self.root, bg='#2b1f2e')
+      self.confirmButton = Button(
+          self.returnFrame,
+          text='Confirm',
+          font=('arial', res.sy(18)),
+          bg='#2d2d53',
+          fg=self.btnFg,
+          width=res.sx(8),
+          command=lambda: self.exit('confirm')
+      )
+      self.cancelButton = Button(
+          self.returnFrame,
+          text='Cancel',
+          font=('arial', res.sy(18)),
+          bg='#532d2d',
+          fg=self.btnFg,
+          width=res.sx(8),
+          command=lambda: self.exit('cancel')
+      )
 
-      self.confirmButton.grid(row = 0, column = 0, padx = 20, pady = 20)
-      self.cancelButton.grid(row = 0, column = 1, padx = 20)
+      self.confirmButton.grid(row=0, column=0, padx=res.sx(20), pady=res.sy(20))
+      self.cancelButton.grid(row=0, column=1, padx=res.sx(20))
+
       self.returnFrame.pack()
 
       self.root.protocol('WM_DELETE_WINDOW', lambda: self.exit('cancel'))
@@ -265,8 +318,8 @@ class tags_Window:
          inactiveSelect = f"#{int(rgb[0] / 4):02x}{int(rgb[1] / 4):02x}{int(rgb[2] / 4):02x}"
 
          window = Frame(self.showTagsFrame, bg = hexColour)
-         frame = Frame(window, width = 88, height = 22)
-         button = Checkbutton(frame, text = text, font = ('arial', 9 - (len(text) // 8)), bg = '#1f1f1f', fg = '#ffffff', anchor = W, width = 10, 
+         frame = Frame(window, width = res.sx(88), height = res.sy(22))
+         button = Checkbutton(frame, text = text, font = ('arial', res.sy(9 - (len(text) // 8))), bg = '#1f1f1f', fg = '#ffffff', anchor = W, width = res.sx(10), 
                               selectcolor = inactiveSelect, variable = StringVar(name = text))
          button.config(command = lambda text = text, colour = hexColour, button = button: self.select_tags(text, colour, button))
 
@@ -285,9 +338,9 @@ class tags_Window:
       column = position % 4
 
       tagTuple[2].pack_propagate(0)
-      tagTuple[2].pack(padx = 1, pady = 1)
+      tagTuple[2].pack(padx = res.sx(1), pady = res.sy(1))
       tagTuple[3].pack(fill = BOTH, expand = 1)
-      tagTuple[1].grid(row = row, column = column, padx = 5, pady = 5)
+      tagTuple[1].grid(row = row, column = column, padx = res.sx(5), pady = res.sy(5))
 
       return len(self.tagsDict)
 
@@ -304,9 +357,9 @@ class tags_Window:
          column = self.newTagPosition % 4
 
          self.tagsDict[text][2].pack_propagate(0)
-         self.tagsDict[text][2].pack(padx = 1, pady = 1)
+         self.tagsDict[text][2].pack(ppadx = res.sx(1), pady = res.sy(1))
          self.tagsDict[text][3].pack(fill = BOTH, expand = 1)
-         self.tagsDict[text][1].grid(row = row, column = column, padx = 5, pady = 5)
+         self.tagsDict[text][1].grid(row = row, column = column, padx = res.sx(5), pady = res.sy(5))
 
          # self.tagsDict[text] = (colour, window, frame, button)
          self.selectedTags.append((text, hexColour))
@@ -409,7 +462,7 @@ class tags_Window:
             dispCounter += 1
 
          elif (textExists and (self.tagsDict[tag][1].winfo_ismapped() == 0)) or (text == ''): #map
-            self.tagsDict[tag][1].grid(row = row, column = column, padx = 5, pady = 5)
+            self.tagsDict[tag][1].grid(row = row, column = column, padx = res.sx(5), pady = res.sy(5))
             dispCounter += 1
 
          elif not textExists and (self.tagsDict[tag][1].winfo_ismapped() == 1): #unmap

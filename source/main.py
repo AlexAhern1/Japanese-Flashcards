@@ -9,14 +9,26 @@ import config as cfg
 import client
 import library_editor
 import game
+import resolution as res
 
 root = Tk()
+res.SetScreenResolution(root.winfo_screenwidth(), root.winfo_screenheight())
+
+xScale = res.GetScaledWidth()
+yScale = res.GetScaledHeight()
+
+width = 1440
+height = 900
+
+windowWidth = res.sx(width)
+windowHeight = res.sy(height)
+
 root.title('Japanese Flashcards') 
-root.geometry('1280x720+40+10')
+root.geometry(f'{windowWidth}x{windowHeight}+{(res.WIDTH - windowWidth) // 2}+{((res.HEIGHT - windowHeight) // 2)}')
 
 root.iconbitmap(users.parentPath / "images" / "kanji_icon.ico")
 
-rootscreen = Frame(root, width = 1440, height = 900, bg = '#000000')
+rootscreen = Frame(root, width = width, height = height, bg = '#000000')
 rootscreen.pack_propagate(0)
 rootscreen.pack()
 
@@ -24,8 +36,6 @@ gameInterface = game.Game_Interface(root, bg = '#555555')
 
 # DEFAULTS:
 DEFAULT_GAME_MODE = "vocab"
-
-
 
 class main_menu(client.Window):
 
@@ -36,19 +46,24 @@ class main_menu(client.Window):
 		self.btnfg = '#ffffff'
 		self.btnbg = '#333333'
 
-		self.gameButton = self.new_Button(self.mainWin, text = 'Play Flashcards', font = ('arial', 32), width = 13, fg = self.btnfg, bg = self.btnbg,
+
+
+		mainMenuButtonSize = res.sx(32)
+		padding = res.sy(100)
+
+		self.gameButton = self.new_Button(self.mainWin, text = 'Play Flashcards', font = ('arial', mainMenuButtonSize), width = 13, fg = self.btnfg, bg = self.btnbg,
 													 command = lambda: self.moveto_window(gameSettings, exec_ = gameSettings.load_defaults),
 													 geom = self.set_geom(row = 0, column = 0))
-		self.visitLibraryButton = self.new_Button(self.mainWin, text = 'Visit Library', font = ('arial', 32), width = 13, fg = self.btnfg, bg = self.btnbg,
+		self.visitLibraryButton = self.new_Button(self.mainWin, text = 'Visit Library', font = ('arial', mainMenuButtonSize), width = 13, fg = self.btnfg, bg = self.btnbg,
 																command = lambda: self.moveto_window(libraryInterface, exec_ = libraryInterface.setup_library),
-																geom = self.set_geom(row = 1, column = 0, pady = 100))
-		self.accountButton = self.new_Button(self.mainWin, text = 'Accounts', font = ('arial', 32), width = 13, fg = self.btnfg, bg = self.btnbg,
+																geom = self.set_geom(row = 1, column = 0, pady = padding))
+		self.accountButton = self.new_Button(self.mainWin, text = 'Accounts', font = ('arial', mainMenuButtonSize), width = 13, fg = self.btnfg, bg = self.btnbg,
 														 command = lambda: self.moveto_window(AccountsInterface, exec_ = AccountsInterface.load_current_user),
 														 geom = self.set_geom(row = 2, column = 0),
 														 state = DISABLED)
-		self.quitButton = self.new_Button(self.mainWin, text = 'Quit', font = ('arial', 32), width = 13, fg = self.btnfg, bg = self.btnbg,
+		self.quitButton = self.new_Button(self.mainWin, text = 'Quit', font = ('arial', mainMenuButtonSize), width = 13, fg = self.btnfg, bg = self.btnbg,
 													 command = root.destroy,
-													 geom = self.set_geom(row = 3, column = 0, pady = 100))
+													 geom = self.set_geom(row = 3, column = 0, pady = padding))
 
 		allData = cfg.getData()
 
@@ -124,120 +139,302 @@ class library_interface(client.Window):
 										  data[4].split(',') if data[4] != 'none' else ['none']) 
 										  for data in mainMenu.kanjiData['all']}
 
-		self.viewWindow = self.new_Frame(self.mainWin, width = 1030, height = 710, bg = self.col['view frame'],
-													geom = self.set_geom(row = 0, column = 1, padx = 5, freeze = 1))
-
-		self.buttonsWindow = self.new_Frame(self.mainWin, width = 200, height = 700, bg = self.col['buttons bd'],
-												 geom = self.set_geom(row = 0, column = 2, freeze = 1))
 
 
-		self.buttonsFrameUpper = self.new_Frame(self.buttonsWindow, width = 190, height = 125, bg = self.col['buttons frame'],
-													  geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5, freeze = 1))
-
-		self.addButton = self.new_Button(self.buttonsFrameUpper, text = 'Add', font = ('arial', 14), width = 6, 
-													command = lambda: self.verify_correct_display('Add', self.addKanjiEditor, self.addButton, '#ffff00'),
-													geom = self.set_geom(row = 0, column = 0, padx = 7, pady = 16, ipadx = 4))
-		self.deleteButton = self.new_Button(self.buttonsFrameUpper, text = 'Delete', font = ('arial', 14), width = 6,
-														command = lambda: self.verify_correct_display('Delete', self.deleteKanjiEditor, self.deleteButton, '#ff8080'),
-														geom = self.set_geom(row = 0, column = 1, ipadx = 4))
-		self.editButton = self.new_Button(self.buttonsFrameUpper, text = 'Edit', font = ('arial', 14), width = 6,
-													 command = lambda: self.verify_correct_display('Edit', self.editKanjiEditor, self.editButton, '#00aaff'),
-													 geom = self.set_geom(row = 1, column = 0, ipadx = 4))
-
-		self.displayTypeButton = self.new_Button(self.buttonsFrameUpper, text = '漢字', font = ('arial', 14), width = 6,
-															  command = self.change_display_type,
-															  geom = self.set_geom(row = 1, column = 1, ipadx = 4))
 
 
-		self.buttonsFrameMiddle = self.new_Frame(self.buttonsWindow, width = 190, height = 260, bg = self.col['buttons frame'],
-															  geom = self.set_geom(row = 1, column = 0, freeze = 1))
+		self.viewWindow = self.new_Frame(
+			self.mainWin,
+			width=res.sx(1030),
+			height=res.sy(710),
+			bg=self.col['view frame'],
+			geom=self.set_geom(row=0, column=1, padx=res.sx(5), freeze=1)
+		)
 
-		self.sortByGradeButton = self.new_Button(self.buttonsFrameMiddle, text = 'Sort by Grade', font = ('arial', 12), bg = '#4a2060', fg = 'white', width = 12,
-															  command = lambda: self.visualiser.sort_by('grade'),
-															  geom = self.set_geom(row = 0, column = 0, padx = 35, pady = 5))
+		self.buttonsWindow = self.new_Frame(
+			self.mainWin,
+			width=res.sx(200),
+			height=res.sy(700),
+			bg=self.col['buttons bd'],
+			geom=self.set_geom(row=0, column=2, freeze=1)
+		)
 
-		self.sortByJlptButton = self.new_Button(self.buttonsFrameMiddle, text = 'Sort by JLPT', font = ('arial', 12), bg = '#4a2060', fg = 'white', width = 12,
-															  command = lambda: self.visualiser.sort_by('jlpt'),
-															  geom = self.set_geom(row = 1, column = 0))
+		self.buttonsFrameUpper = self.new_Frame(
+			self.buttonsWindow,
+			width=res.sx(190),
+			height=res.sy(125),
+			bg=self.col['buttons frame'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5), freeze=1)
+		)
 
-		self.sortByDateButton = self.new_Button(self.buttonsFrameMiddle, text = 'Sort by Date', font = ('arial', 12), bg = '#4a2060', fg = 'white', width = 12,
-															  command = lambda: self.visualiser.sort_by('date'),
-															  geom = self.set_geom(row = 2, column = 0, pady = 5))
+		self.addButton = self.new_Button(
+			self.buttonsFrameUpper,
+			text='Add',
+			font=('arial', res.sy(14)),
+			width=6,
+			command=lambda: self.verify_correct_display('Add', self.addKanjiEditor, self.addButton, '#ffff00'),
+			geom=self.set_geom(row=0, column=0, padx=res.sx(7), pady=res.sy(16), ipadx=res.sx(4))
+		)
+
+		self.deleteButton = self.new_Button(
+			self.buttonsFrameUpper,
+			text='Delete',
+			font=('arial', res.sy(14)),
+			width=6,
+			command=lambda: self.verify_correct_display('Delete', self.deleteKanjiEditor, self.deleteButton, '#ff8080'),
+			geom=self.set_geom(row=0, column=1, ipadx=res.sx(4))
+		)
+
+		self.editButton = self.new_Button(
+			self.buttonsFrameUpper,
+			text='Edit',
+			font=('arial', res.sy(14)),
+			width=6,
+			command=lambda: self.verify_correct_display('Edit', self.editKanjiEditor, self.editButton, '#00aaff'),
+			geom=self.set_geom(row=1, column=0, ipadx=res.sx(4))
+		)
+
+		self.displayTypeButton = self.new_Button(
+			self.buttonsFrameUpper,
+			text='漢字',
+			font=('arial', res.sy(14)),
+			width=6,
+			command=self.change_display_type,
+			geom=self.set_geom(row=1, column=1, ipadx=res.sx(4))
+		)
+
+		self.buttonsFrameMiddle = self.new_Frame(
+			self.buttonsWindow,
+			width=res.sx(190),
+			height=res.sy(260),
+			bg=self.col['buttons frame'],
+			geom=self.set_geom(row=1, column=0, freeze=1)
+		)
+
+		self.sortByGradeButton = self.new_Button(
+			self.buttonsFrameMiddle,
+			text='Sort by Grade',
+			font=('arial', res.sy(12)),
+			bg='#4a2060',
+			fg='white',
+			width=12,
+			command=lambda: self.visualiser.sort_by('grade'),
+			geom=self.set_geom(row=0, column=0, padx=res.sx(35), pady=res.sy(5))
+		)
+
+		self.sortByJlptButton = self.new_Button(
+			self.buttonsFrameMiddle,
+			text='Sort by JLPT',
+			font=('arial', res.sy(12)),
+			bg='#4a2060',
+			fg='white',
+			width=12,
+			command=lambda: self.visualiser.sort_by('jlpt'),
+			geom=self.set_geom(row=1, column=0)
+		)
+
+		self.sortByDateButton = self.new_Button(
+			self.buttonsFrameMiddle,
+			text='Sort by Date',
+			font=('arial', res.sy(12)),
+			bg='#4a2060',
+			fg='white',
+			width=12,
+			command=lambda: self.visualiser.sort_by('date'),
+			geom=self.set_geom(row=2, column=0, pady=res.sy(5))
+		)
+
+		self.searchingFrame = self.new_Frame(
+			self.buttonsFrameMiddle,
+			bg=self.col['buttons frame'],
+			geom=self.set_geom(row=3, column=0)
+		)
+
+		self.searchingEntry = self.new_Entry(
+			self.buttonsFrameMiddle,
+			font=('arial', res.sy(14)),
+			width=12,
+			geom=self.set_geom(row=4, column=0, pady=res.sy(5))
+		)
+
+		self.visualiser = self.new_visualiser(
+			self.viewWindow,
+			width=res.sx(1005),
+			height=res.sy(485),
+			columns={1: 36, 2: 21, 3: 14, 4: 10},
+			entry=self.searchingEntry,
+			geom=self.set_geom(row=0, column=0)
+		)
+
+		self.searchKanjiButton = self.new_radiobutton(
+			self.searchingFrame,
+			variable=self.visualiser.searchType,
+			bg='#6b2e6b',
+			value='kanji',
+			command=lambda: self.visualiser.select_search_type('kanji'),
+			geom=self.set_geom(row=0, column=0)
+		)
+
+		self.searchKanaButton = self.new_radiobutton(
+			self.searchingFrame,
+			variable=self.visualiser.searchType,
+			bg='#6b2e6b',
+			value='kana',
+			command=lambda: self.visualiser.select_search_type('kana'),
+			geom=self.set_geom(row=1, column=0)
+		)
+
+		self.searchEnglishButton = self.new_radiobutton(
+			self.searchingFrame,
+			variable=self.visualiser.searchType,
+			bg='#6b2e6b',
+			value='english',
+			command=lambda: self.visualiser.select_search_type('english'),
+			geom=self.set_geom(row=2, column=0)
+		)
+
+		self.searchKanjiText = self.new_Label(
+			self.searchingFrame,
+			text='漢字',
+			font=('arial', res.sy(12)),
+			bg='#6b2e6b',
+			fg='white',
+			geom=self.set_geom(row=0, column=1)
+		)
+
+		self.searchKanaText = self.new_Label(
+			self.searchingFrame,
+			text='あ',
+			font=('arial', res.sy(12)),
+			bg='#6b2e6b',
+			fg='white',
+			geom=self.set_geom(row=1, column=1, pady=res.sy(5))
+		)
+
+		self.searchEnglishText = self.new_Label(
+			self.searchingFrame,
+			text='ABC',
+			font=('arial', res.sy(12)),
+			bg='#6b2e6b',
+			fg='white',
+			geom=self.set_geom(row=2, column=1)
+		)
+
+		self.buttonsFrameLower = self.new_Frame(
+			self.buttonsWindow,
+			width=res.sx(190),
+			height=res.sy(100),
+			bg=self.col['buttons frame'],
+			geom=self.set_geom(row=2, column=0, pady=res.sy(5), freeze=1)
+		)
+
+		self.backButton = self.new_Button(
+			self.buttonsFrameLower,
+			text='Back',
+			font=('arial', res.sy(14)),
+			width=8,
+			command=lambda: self.moveto_window(mainMenu, exec_=self.collapse_library),
+			geom=self.set_geom(row=4, column=0, padx=res.sx(50), pady=res.sy(30))
+		)
+
+		self.kanjiDetailsWin = self.new_Frame(
+			self.viewWindow,
+			bg='#47536b',
+			geom=self.set_geom(row=1, column=0)
+		)
+
+		self.kanjiDetailsFrame = self.new_Frame(
+			self.kanjiDetailsWin,
+			bg='#000000',
+			width=res.sx(1020),
+			height=res.sy(190),
+			geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5), freeze=1)
+		)
+
+		self.addKanjiEditor = library_editor.adding_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+		self.deleteKanjiEditor = library_editor.deleting_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+		self.editKanjiEditor = library_editor.editing_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+
+		self.addHiraganaEditor = library_editor.adding_hiragana_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+		self.deleteHiraganaEditor = library_editor.deleting_hiragana_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+		self.editHiraganaEditor = library_editor.editing_hiragana_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+
+		self.addKatakanaEditor = library_editor.adding_katakana_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+		self.deleteKatakanaEditor = library_editor.deleting_katakana_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+		self.editKatakanaEditor = library_editor.editing_katakana_editor(self.kanjiDetailsWin, width=res.sx(1020), height=res.sy(190))
+
+		self.LowestFrame = self.new_Frame(
+			self.buttonsWindow,
+			bg='black',
+			width=res.sx(190),
+			height=res.sy(190),
+			geom=self.set_geom(row=3, column=0, freeze=1)
+		)
+
+		self.enlargedKanjiLabel = self.new_Label(
+			self.LowestFrame,
+			text='',
+			bg='black',
+			fg='white',
+			geom=self.set_geom(row=0, column=0)
+		)
+
+		self.gradeTitle = self.new_Label(
+			self.kanjiDetailsFrame,
+			font=('arial', res.sy(16)),
+			bg='#000000',
+			fg='#ffff00',
+			width=8,
+			anchor='w',
+			geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5))
+		)
+
+		self.jlptTitle = self.new_Label(
+			self.kanjiDetailsFrame,
+			font=('arial', res.sy(16)),
+			bg='#000000',
+			fg='#ffff00',
+			width=8,
+			anchor='w',
+			geom=self.set_geom(row=0, column=1)
+		)
+
+		self.tagsTitle = self.new_Label(
+			self.kanjiDetailsFrame,
+			font=('arial', res.sy(16)),
+			bg='#000000',
+			fg='#ffff00',
+			width=40,
+			anchor='w',
+			geom=self.set_geom(row=0, column=2, padx=res.sx(5))
+		)
+
+		self.wordsFrame = self.new_Frame(
+			self.kanjiDetailsFrame,
+			bg='#000000',
+			geom=self.set_geom(row=1, column=0, padx=res.sx(5), pady=res.sy(5), columnspan=3, sticky='w')
+		)
+
+		self.kanaLabel = self.new_Label(
+			self.wordsFrame,
+			bg='#000000',
+			fg='#ffff00',
+			font=('arial', res.sy(16)),
+			geom=self.set_geom(row=0, column=0, padx=res.sx(2), pady=res.sy(2))
+		)
+
+		self.englishLabel = self.new_Label(
+			self.wordsFrame,
+			bg='#000000',
+			fg='#ffff00',
+			font=('arial', res.sy(16)),
+			geom=self.set_geom(row=0, column=1, padx=res.sx(2))
+		)
 
 
-		self.searchingFrame = self.new_Frame(self.buttonsFrameMiddle, bg = self.col['buttons frame'],
-														 geom = self.set_geom(row = 3, column = 0))
-
-		self.searchingEntry = self.new_Entry(self.buttonsFrameMiddle, font = ('arial', 14), width = 12,
-														 geom = self.set_geom(row = 4, column = 0, pady = 5))
-
-		self.visualiser = self.new_visualiser(self.viewWindow, width = 1005, height = 485, columns = {1: 36, 2: 21, 3: 14, 4: 10}, entry = self.searchingEntry,
-														  geom = self.set_geom(row = 0, column = 0))
-
-		self.searchKanjiButton = self.new_radiobutton(self.searchingFrame, variable = self.visualiser.searchType, bg = '#6b2e6b',
-																	 value = 'kanji', command = lambda: self.visualiser.select_search_type('kanji'),
-																	 geom = self.set_geom(row = 0, column = 0))
-		self.searchKanaButton = self.new_radiobutton(self.searchingFrame, variable = self.visualiser.searchType, bg = '#6b2e6b',
-																	value = 'kana', command = lambda: self.visualiser.select_search_type('kana'),
-																	geom = self.set_geom(row = 1, column = 0))
-		self.searchEnglishButton = self.new_radiobutton(self.searchingFrame, variable = self.visualiser.searchType, bg = '#6b2e6b',
-																	 	value = 'english', command = lambda: self.visualiser.select_search_type('english'),
-																	 	geom = self.set_geom(row = 2, column = 0))
 
 
-		self.searchKanjiText = self.new_Label(self.searchingFrame, text = '漢字', font = ('arial', 12), bg = '#6b2e6b', fg = 'white',
-														  geom = self.set_geom(row = 0, column = 1))
-		self.searchKanaText = self.new_Label(self.searchingFrame, text = 'あ', font = ('arial', 12), bg = '#6b2e6b', fg = 'white',
-														 geom = self.set_geom(row = 1, column = 1, pady = 5))
-		self.searchEnglishText = self.new_Label(self.searchingFrame, text = 'ABC', font = ('arial', 12), bg = '#6b2e6b', fg = 'white',
-														 	 geom = self.set_geom(row = 2, column = 1))
 
-		self.buttonsFrameLower = self.new_Frame(self.buttonsWindow, width = 190, height = 100, bg = self.col['buttons frame'],
-													  geom = self.set_geom(row = 2, column = 0, pady = 5, freeze = 1))
-
-		self.backButton = self.new_Button(self.buttonsFrameLower, text = 'Back', font = ('arial', 14), width = 8,
-											  command = lambda: self.moveto_window(mainMenu, exec_ = self.collapse_library),
-											  geom = self.set_geom(row = 4, column = 0, padx = 50, pady = 30))
-
-		self.kanjiDetailsWin = self.new_Frame(self.viewWindow, bg = '#47536b',  geom = self.set_geom(row = 1, column = 0))
-		self.kanjiDetailsFrame = self.new_Frame(self.kanjiDetailsWin, bg = '#000000', width = 1020, height = 190,
-															 geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5, freeze = 1))
-
-		self.addKanjiEditor = library_editor.adding_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-		self.deleteKanjiEditor = library_editor.deleting_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-		self.editKanjiEditor = library_editor.editing_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-
-		self.addHiraganaEditor = library_editor.adding_hiragana_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-		self.deleteHiraganaEditor = library_editor.deleting_hiragana_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-		self.editHiraganaEditor = library_editor.editing_hiragana_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-
-		self.addKatakanaEditor = library_editor.adding_katakana_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-		self.deleteKatakanaEditor = library_editor.deleting_katakana_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-		self.editKatakanaEditor = library_editor.editing_katakana_editor(self.kanjiDetailsWin, width = 1020, height = 190)
-
-		self.LowestFrame = self.new_Frame(self.buttonsWindow, bg = 'black', width = 190, height = 190,
-										 geom = self.set_geom(row = 3, column = 0, freeze = 1))
-
-		self.enlargedKanjiLabel = self.new_Label(self.LowestFrame, text = '', bg = 'black', fg = 'white',
-															  geom = self.set_geom(row = 0, column = 0))
-
-
-		self.gradeTitle = self.new_Label(self.kanjiDetailsFrame, font = ('arial', 16), bg = '#000000', fg = '#ffff00', width = 8, anchor = 'w',
-													geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5))
-		self.jlptTitle = self.new_Label(self.kanjiDetailsFrame, font = ('arial', 16), bg = '#000000', fg = '#ffff00', width = 8, anchor = 'w',
-												  geom = self.set_geom(row = 0, column = 1))
-		self.tagsTitle = self.new_Label(self.kanjiDetailsFrame, font = ('arial', 16), bg = '#000000', fg = '#ffff00', width = 40, anchor = 'w',
-												  geom = self.set_geom(row = 0, column = 2, padx = 5))
-
-
-		self.wordsFrame = self.new_Frame(self.kanjiDetailsFrame, bg = '#000000',
-													geom = self.set_geom(row = 1, column = 0, padx = 5, pady = 5, columnspan = 3, sticky = 'w'))
-
-		self.kanaLabel = self.new_Label(self.wordsFrame, bg = '#000000', fg = '#ffff00', font = ('arial', 16),
-												  geom = self.set_geom(row = 0, column = 0, padx = 2, pady = 2))
-
-		self.englishLabel = self.new_Label(self.wordsFrame, bg = '#000000', fg = '#ffff00', font = ('arial', 16),
-													  geom = self.set_geom(row = 0, column = 1, padx = 2))
 
 	def verify_correct_display(self, key, *args):
 		if self.currentDisplayType == 'kanji':
@@ -487,21 +684,46 @@ class library_interface(client.Window):
 
 	def preview_edit(self, kanji, changes):
 
-		#grid the edit and cancel button on the extreme right, which will call the cancel preview function.
-		self.confirmEditButton = Button(self.kanjiDetailsFrame, text = 'UPDATE', font = ('arial', 18),  bg = '#262626', fg = '#cdcde4', width = 8,
-													 command = lambda: self.confirm_edit_kanji(kanji, changes))
-		self.cancelPreviewButton = Button(self.kanjiDetailsFrame, text = 'CANCEL', font = ('arial', 18), bg = '#262626', fg = '#e4cdcd', width = 8,
-		 							 				 command = self.cancel_edit_preview)
+		# grid the edit and cancel button on the extreme right, which will call the cancel preview function.
+		self.confirmEditButton = Button(
+			self.kanjiDetailsFrame,
+			text='UPDATE',
+			font=('arial', res.sy(18)),
+			bg='#262626',
+			fg='#cdcde4',
+			width=8,
+			command=lambda: self.confirm_edit_kanji(kanji, changes)
+		)
+		self.cancelPreviewButton = Button(
+			self.kanjiDetailsFrame,
+			text='CANCEL',
+			font=('arial', res.sy(18)),
+			bg='#262626',
+			fg='#e4cdcd',
+			width=8,
+			command=self.cancel_edit_preview
+		)
 
-		self.confirmEditButton.grid(row = 0, column = 4, padx = 175, pady = 23, sticky = 'se', rowspan = 2)
-		self.cancelPreviewButton.grid(row = 2, column = 4, sticky = 's')
+		self.confirmEditButton.grid(
+			row=0,
+			column=4,
+			padx=res.sx(175),
+			pady=res.sy(23),
+			sticky='se',
+			rowspan=2
+		)
+		self.cancelPreviewButton.grid(
+			row=2,
+			column=4,
+			sticky='s'
+		)
 
 		#manually update the display window interface to show the edited information
 		self.gradeTitle.config(text = f"Grade: {changes['grade']}")
 		self.jlptTitle.config(text = f"JLPT: {changes['jlpt']}")
 		self.tagsTitle.config(text = f"Tags: {', '.join(changes['tags'])}")
 		kanaText = format_kana([kana for kana in changes['words']], 4)
-		engText = format_english([changes['words'][kana] for kana in changes['words']], self.engPixels, 900)
+		engText = format_english([changes['words'][kana] for kana in changes['words']], self.engPixels, res.sx(900))
 		self.kanaLabel.config(text = kanaText)
 		self.englishLabel.config(text = engText)
 
@@ -598,9 +820,6 @@ class library_interface(client.Window):
 					engSplit.append(eng)
 			engsList.append(engSplit)
 
-		formattedKana = format_kana(words[0], 4)
-		formattedEngs = format_english(engsList, self.engPixels, 900)
-
 		wordsDict = {kana: eng for (kana, eng) in zip(words[0], engsList)}
 
 		#temporarily save the new kanji in self.allData
@@ -609,12 +828,12 @@ class library_interface(client.Window):
 		self.highlight(kanji, highlightcolour = '#00ff00')
 
 		#grid the confirm and cancel button on the extreme right, which will call the cancel preview function.
-		self.confirmAddButton = Button(self.kanjiDetailsFrame, text = 'CONFIRM', font = ('arial', 18),  bg = '#262626', fg = '#cde4cd', width = 8,
+		self.confirmAddButton = Button(self.kanjiDetailsFrame, text = 'CONFIRM', font = ('arial', res.sy(18)),  bg = '#262626', fg = '#cde4cd', width = res.sx(8),
 													 command = lambda: self.confirm_add_new_kanji(kanji, wordsDict, data))
-		self.cancelPreviewButton = Button(self.kanjiDetailsFrame, text = 'CANCEL', font = ('arial', 18), bg = '#262626', fg = '#e4cdcd', width = 8,
+		self.cancelPreviewButton = Button(self.kanjiDetailsFrame, text = 'CANCEL', font = ('arial', res.sy(18)), bg = '#262626', fg = '#e4cdcd', width = res.sx(8),
 		 							 				 command = lambda: self.cancel_add_preview(kanji, *label_shifts))
 
-		self.confirmAddButton.grid(row = 0, column = 4, padx = 175, pady = 23, sticky = 'se', rowspan = 2)
+		self.confirmAddButton.grid(row = 0, column = 4, padx = res.sx(175), pady = res.sy(23), sticky = 'se', rowspan = 2)
 		self.cancelPreviewButton.grid(row = 2, column = 4, sticky = 's')
 
 		#change the add kanji interface to the display kanji info interface, which will show all the kanji info.
@@ -624,8 +843,8 @@ class library_interface(client.Window):
 		return label_shifts
 
 	def get_special_hover_case(self, kanji, path):
-		size = {1: 135, 2: 68, 3: 46, 4: 34}[len(kanji)]
-		pady = {1: 0, 2: 35, 3: 55, 4: 65}[len(kanji)]
+		size = {1: res.sy(135), 2: res.sy(68), 3: res.sy(46), 4: res.sy(34)}[len(kanji)]
+		pady = {1: 0, 2: res.sy(35), 3: res.sy(55), 4: res.sy(65)}[len(kanji)]
 		if (self.activePopup == 'Delete') and (kanji in self.deleteKanjiEditor.pendingDict):
 			self.selectedKanji = '_DELETING_'
 			self.enlargedKanjiLabel.config(text = kanji if (path == 'enter') else '', font = ('times', size), pady = pady, fg = '#ff0000')
@@ -640,8 +859,8 @@ class library_interface(client.Window):
 		specialCase = self.get_special_hover_case(kanji, 'enter') if self.activePopup in ('Delete', 'Edit') else False
 		if (self.activePopup != 'Add' and self.selectedKanji == '') or (specialCase is True) or (bypass is True):
 			length = len(kanji)
-			size = {1: 135, 2: 68, 3: 46, 4: 34}[length]
-			pady = {1: 0, 2: 35, 3: 55, 4: 65}[length]
+			size = {1: res.sy(135), 2: res.sy(68), 3: res.sy(46), 4: res.sy(34)}[len(kanji)]
+			pady = {1: 0, 2: res.sy(35), 3: res.sy(55), 4: res.sy(65)}[len(kanji)]
 			fg = {1: '#ffffff', 2: '#80ff80', 3: '#80ffff', 4: '#ff80ff'}[length]
 			self.enlargedKanjiLabel.config(text = kanji, font = ('times', size), pady = pady, fg = fg)
 			self.visualiser.highlight_label_fg(kanji, self.labelHoverFg)
@@ -807,213 +1026,221 @@ class gameSettings_interface(client.Window):
 		self.col['new preset bg'] = '#b3d9e6'
 		self.col['open presets bg'] = '#b3c8e6'
 
+
+
+
+
 		#main frame containing game type buttons
-		self.modesWindow = self.new_Frame(self.mainWin, bg = self.col['modesbg'], width = 150, height = 500,
-													 geom = self.set_geom(row = 0, column = 0, padx = 10, sticky = N, freeze = 1))
+		self.modesWindow = self.new_Frame(self.mainWin, bg=self.col['modesbg'], width=res.sx(150), height=res.sy(500),
+													 geom=self.set_geom(row=0, column=0, padx=res.sx(10), sticky=N, freeze=1))
 
-		self.modesFrame = self.new_Frame(self.modesWindow, bg = self.col['modesbg'], width = 150, height = 500,
-													 geom = self.set_geom(row = 0, column = 0, freeze = 1))
+		self.modesFrame = self.new_Frame(self.modesWindow, bg=self.col['modesbg'], width=res.sx(150), height=res.sy(500),
+													 geom=self.set_geom(row=0, column=0, freeze=1))
 
-		self.vocabModeButton = self.new_Button(self.modesFrame, text = 'Vocab', font = ('arial', 20), width = 7,
-															bg = self.col['modebtnbg'], fg = self.col['modebtnfg'],
-															command = lambda: self.set_game_mode('vocab'),
-															geom = self.set_geom(row = 0, column = 0, padx = 7, pady = 10))
-		self.writingModeButton = self.new_Button(self.modesFrame, text = 'Writing', font = ('arial', 20), width = 7,
-															  bg = self.col['modebtnbg'], fg = self.col['modebtnfg'],
-															  command = lambda: self.set_game_mode('writing'),
-															  geom = self.set_geom(row = 1, column = 0, pady = 10))
+		self.vocabModeButton = self.new_Button(self.modesFrame, text='Vocab', font=('arial', res.sy(20)), width=res.sx(7), state = DISABLED,
+															bg=self.col['modebtnbg'], fg=self.col['modebtnfg'],
+															command=lambda: self.set_game_mode('vocab'),
+															geom=self.set_geom(row=0, column=0, padx=res.sx(7), pady=res.sy(10)))
+		self.writingModeButton = self.new_Button(self.modesFrame, text='Writing', font=('arial', res.sy(20)), width=res.sx(7), state = DISABLED,
+															  bg=self.col['modebtnbg'], fg=self.col['modebtnfg'],
+															  command=lambda: self.set_game_mode('writing'),
+															  geom=self.set_geom(row=1, column=0, pady=res.sy(10)))
 
-		self.showKanaButton = self.new_Button(self.modesFrame, text = 'Show Kana:\nYes', font = ('arial', 15),
-														  bg = self.col['modebtnbg'], fg = self.col['modebtnfg'],
-														  command = self.writing_toggle_showing_kana,
-														  geom = self.set_geom(row = 2, column = 0, pady = 10))
+		self.showKanaButton = self.new_Button(self.modesFrame, text='Show Kana:\nYes', font=('arial', res.sy(15)), state = DISABLED,
+														  bg=self.col['modebtnbg'], fg=self.col['modebtnfg'],
+														  command=self.writing_toggle_showing_kana,
+														  geom=self.set_geom(row=2, column=0, pady=res.sy(10)))
 
-		self.gamemodeFrame = self.new_Frame(self.modesFrame, bg = self.col['modesbg'], width = 140, height = 100,
-														geom = self.set_geom(row = 3, column = 0, padx = 7, pady = 195, freeze = 1))
+		self.gamemodeFrame = self.new_Frame(self.modesFrame, bg=self.col['modesbg'], width=res.sx(140), height=res.sy(100),
+														geom=self.set_geom(row=3, column=0, padx=res.sx(7), pady=res.sy(195), freeze=1))
 
+		self.gamemodeTitle = self.new_Label(self.gamemodeFrame, font=('arial', res.sy(16)), width=res.sx(10),
+														bg='#191221', fg='yellow',
+														geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5), ipady=res.sy(10)))
 
-		self.gamemodeTitle = self.new_Label(self.gamemodeFrame, font = ('arial', 16), width = 10,
-														bg = '#191221', fg = 'yellow',
-														geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5, ipady = 10))
 
 		#main frame containing various filtering options for selecting kanji
-		self.filterWindow = self.new_Frame(self.mainWin, bg = self.col['filtermain'], width = 1000, height = 800,
-													  geom = self.set_geom(row = 0, column = 1, freeze = 1))
+		self.filterWindow = self.new_Frame(self.mainWin, bg=self.col['filtermain'], width=res.sx(1000), height=res.sy(800),
+													  geom=self.set_geom(row=0, column=1, freeze=1))
 
-		self.showFiltersWindow = self.new_Frame(self.filterWindow, bg = self.col['filterwin'], width = 230, height = 715,
-															 geom = self.set_geom(row = 1, column = 0, padx = 10, freeze = 1))
+		self.showFiltersWindow = self.new_Frame(self.filterWindow, bg=self.col['filterwin'], width=res.sx(230), height=res.sy(715),
+															 geom=self.set_geom(row=1, column=0, padx=res.sx(10), freeze=1))
 
-		self.viewFiltersFrame = ScrollingFrame(self.mainWin, self.showFiltersWindow, bg = '#000000', width = 220, height = 705, increments = 1)
+		self.viewFiltersFrame = ScrollingFrame(self.mainWin, self.showFiltersWindow, bg='#000000', width = 220, height = 705, increments=1)
 		self.viewerFrame = self.viewFiltersFrame.canvasFrame
 
-		self.widgets.append({'widget': self.viewFiltersFrame, 'geometry': {'row': 1, 'column': 0, 'padx': 5, 'pady': 5, 'freeze': 0, 'hidden': 0, 'scrollframe': 1, 'loader': None}})
+		self.widgets.append({'widget': self.viewFiltersFrame, 'geometry': {'row': 1, 'column': 0, 'padx': res.sx(5), 'pady': res.sy(5), 'freeze': 0, 'hidden': 0, 'scrollframe': 1, 'loader': None}})
 
-		self.filterTotalFrame = self.new_Frame(self.filterWindow, width = 230, height = 50, bg = self.col['filterwin'],
-															geom = self.set_geom(row = 0, column = 0, pady = 10, freeze = 1))
-		self.filterTotalLabel = self.new_Label(self.filterTotalFrame,text = '', font = ('arial', 20), bg = '#000000', fg = '#ffffff', width = 13, anchor = W,
-															geom = self.set_geom(row = 0, column = 0, padx = 4, pady = 3, ipadx = 4, ipady = 3))
+		self.filterTotalFrame = self.new_Frame(self.filterWindow, width=res.sx(230), height=res.sy(50), bg=self.col['filterwin'],
+															geom=self.set_geom(row=0, column=0, pady=res.sy(10), freeze=1))
+		self.filterTotalLabel = self.new_Label(self.filterTotalFrame, text='', font=('arial', res.sy(20)), bg='#000000', fg='#ffffff', width=res.sx(13), anchor=W,
+															geom=self.set_geom(row=0, column=0, padx=res.sx(4), pady=res.sy(3), ipadx=res.sx(4), ipady=res.sy(3)))
 
-		self.filterCheckButtonsFrame = self.new_Frame(self.filterWindow, width = 400, height = 465, bg = self.col['filterwin'],
-																	 geom = self.set_geom(row = 0, column = 1, rowspan = 2, sticky = NW, pady = 10, freeze = 1))
+		self.filterCheckButtonsFrame = self.new_Frame(self.filterWindow, width=res.sx(400), height=res.sy(465), bg=self.col['filterwin'],
+																	 geom=self.set_geom(row=0, column=1, rowspan=2, sticky=NW, pady=res.sy(10), freeze=1))
 
+		self.filterGradeWindow = self.new_Frame(self.filterCheckButtonsFrame, width=res.sx(390), height=res.sy(110), bg=self.col['filterbg'],
+															 geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5), freeze=1))
 
+		self.filterGradeTitle = self.new_Label(self.filterGradeWindow, text='Filter Grade(s)', font=('arial', res.sy(20)), 
+															bg=self.col['filterbg'], fg=self.col['labelfg'],
+															geom=self.set_geom(row=0, column=0, pady=res.sy(8)))
 
-		self.filterGradeWindow = self.new_Frame(self.filterCheckButtonsFrame, width = 390, height = 110, bg = self.col['filterbg'],
-															 geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5, freeze = 1))
+		self.gradeButtonsFrame = self.new_Frame(self.filterGradeWindow, bg=self.col['filterbg'],
+															 geom=self.set_geom(row=1, column=0, padx=res.sx(6), columnspan=2))
 
-		self.filterGradeTitle = self.new_Label(self.filterGradeWindow, text = 'Filter Grade(s)', font = ('arial', 20), 
-															bg = self.col['filterbg'], fg = self.col['labelfg'],
-															geom = self.set_geom(row = 0, column = 0, pady = 8))
-
-		self.gradeButtonsFrame = self.new_Frame(self.filterGradeWindow, bg = self.col['filterbg'],
-															 geom = self.set_geom(row = 1, column = 0, padx = 6, columnspan = 2))
-
-		self.gradeButtons = {grade: self.new_Button(self.gradeButtonsFrame, text = grade, font = ('arial', 15), width = 3, 
-											 bg = self.col['inactive grade'], fg = self.col['labelfg'],
-											 command = lambda grade = grade: self.adjust_filter('grade', grade),
-											 geom = self.set_geom(row = 1, column = num, padx = 4 if num % 2 == 0 else 0, pady = 4 if num == 0 else 0))
+		self.gradeButtons = {grade: self.new_Button(self.gradeButtonsFrame, text=grade, font=('arial', res.sy(15)), width=res.sx(3), 
+											 bg=self.col['inactive grade'], fg=self.col['labelfg'],
+											 command=lambda grade=grade: self.adjust_filter('grade', grade),
+											 geom=self.set_geom(row=1, column=num, padx=res.sx(4) if num % 2 == 0 else 0, pady=res.sy(4) if num == 0 else 0))
 											 for num, grade in enumerate(('1', '2', '3', '4', '5', '6', 'JH', '-'))}
 
-		self.gradeLogicButton = self.new_Button(self.filterGradeWindow, font = ('arial', 16), fg = self.col['labelfg'], width = 10,
-															 geom = self.set_geom(row = 0, column = 1, sticky = E, padx = 7))
+		self.gradeLogicButton = self.new_Button(self.filterGradeWindow, font=('arial', res.sy(16)), fg=self.col['labelfg'], width=res.sx(10),
+															 geom=self.set_geom(row=0, column=1, sticky=E, padx=res.sx(7)))
 
+		self.filterJlptWindow = self.new_Frame(self.filterCheckButtonsFrame, width=res.sx(390), height=res.sy(110), bg=self.col['filterbg'],
+															geom=self.set_geom(row=1, column=0, freeze=1))
 
-		self.filterJlptWindow = self.new_Frame(self.filterCheckButtonsFrame, width = 390, height = 110, bg = self.col['filterbg'],
-															geom = self.set_geom(row = 1, column = 0, freeze = 1))
+		self.filterJlptTitle = self.new_Label(self.filterJlptWindow, text='Filter JLPT(s)', font=('arial', res.sy(20)), 
+														  bg=self.col['filterbg'], fg=self.col['labelfg'],
+														  geom=self.set_geom(row=0, column=0, pady=res.sy(8)))
 
-		self.filterJlptTitle = self.new_Label(self.filterJlptWindow, text = 'Filter JLPT(s)', font = ('arial', 20), 
-														  bg = self.col['filterbg'], fg = self.col['labelfg'],
-														  geom = self.set_geom(row = 0, column = 0, pady = 8))
+		self.jlptButtonsFrame = self.new_Frame(self.filterJlptWindow, bg=self.col['filterbg'],
+															 geom=self.set_geom(row=1, column=0, padx=res.sx(45), columnspan=2))				
 
-		self.jlptButtonsFrame = self.new_Frame(self.filterJlptWindow, bg = self.col['filterbg'],
-															 geom = self.set_geom(row = 1, column = 0, padx = 45, columnspan = 2))				
-
-		self.jlptButtons = {jlpt: self.new_Button(self.jlptButtonsFrame, text = jlpt, font = ('arial', 16), width = 3,
-										  bg = self.col['inactive jlpt'], fg = self.col['labelfg'],
-										  command = lambda jlpt = jlpt: self.adjust_filter('jlpt', jlpt),
-										  geom = self.set_geom(row = 1, column = num, padx = 4 if num % 2 == 0 else 0, pady = 4 if num == 0 else 0))
+		self.jlptButtons = {jlpt: self.new_Button(self.jlptButtonsFrame, text=jlpt, font=('arial', res.sy(16)), width=res.sx(3),
+										  bg=self.col['inactive jlpt'], fg=self.col['labelfg'],
+										  command=lambda jlpt=jlpt: self.adjust_filter('jlpt', jlpt),
+										  geom=self.set_geom(row=1, column=num, padx=res.sx(4) if num % 2 == 0 else 0, pady=res.sy(4) if num == 0 else 0))
 										  for num, jlpt in enumerate(('N5', 'N4', 'N3', 'N2', 'N1', '-'))}
 
-		self.jlptLogicButton = self.new_Button(self.filterJlptWindow, font = ('arial', 16), fg = self.col['labelfg'], width = 10,
-															 geom = self.set_geom(row = 0, column = 1, padx = 7, sticky = E))
+		self.jlptLogicButton = self.new_Button(self.filterJlptWindow, font=('arial', res.sy(16)), fg=self.col['labelfg'], width=res.sx(10),
+															 geom=self.set_geom(row=0, column=1, padx=res.sx(7), sticky=E))
 
 
 
 
-		self.filterLengthWindow = self.new_Frame(self.filterCheckButtonsFrame, width = 390, height = 110, bg = self.col['filterbg'],
-															  geom = self.set_geom(row = 2, column = 0, pady = 5, freeze = 1))
 
-		self.filterLengthTitle = self.new_Label(self.filterLengthWindow, text = 'Filter Length(s)', font = ('arial', 20), 
-															 bg = self.col['filterbg'], fg = self.col['labelfg'],
-															 geom = self.set_geom(row = 0, column = 0, pady = 8))
 
-		self.lengthButtonsFrame = self.new_Frame(self.filterLengthWindow, bg = self.col['filterbg'],
-															  geom = self.set_geom(row = 1, column = 0, padx = 91, columnspan = 2))  
+		self.filterLengthWindow = self.new_Frame(self.filterCheckButtonsFrame, width=res.sx(390), height=res.sy(110), bg=self.col['filterbg'],
+															  geom=self.set_geom(row=2, column=0, pady=res.sy(5), freeze=1))
 
-		self.lengthButtons = {length: self.new_Button(self.lengthButtonsFrame, text = length, font = ('arial', 16), width = 3,
-												bg = self.col['inactive length'], fg = self.col['labelfg'],
-												command = lambda length = length: self.adjust_filter('length', length),
-												geom = self.set_geom(row = 1, column = num, padx = 4 if num % 2 == 0 else 0, pady = 4 if num == 0 else 0))
+		self.filterLengthTitle = self.new_Label(self.filterLengthWindow, text='Filter Length(s)', font=('arial', res.sy(20)), 
+															 bg=self.col['filterbg'], fg=self.col['labelfg'],
+															 geom=self.set_geom(row=0, column=0, pady=res.sy(8)))
+
+		self.lengthButtonsFrame = self.new_Frame(self.filterLengthWindow, bg=self.col['filterbg'],
+															  geom=self.set_geom(row=1, column=0, padx=res.sx(91), columnspan=2))  
+
+		self.lengthButtons = {length: self.new_Button(self.lengthButtonsFrame, text=length, font=('arial', res.sy(16)), width=res.sx(3),
+												bg=self.col['inactive length'], fg=self.col['labelfg'],
+												command=lambda length=length: self.adjust_filter('length', length),
+												geom=self.set_geom(row=1, column=num, padx=res.sx(4) if num % 2 == 0 else 0, pady=res.sy(4) if num == 0 else 0))
 												for num, length in enumerate(('1', '2', '3', '4+'))}
 
-		self.lengthLogicButton = self.new_Button(self.filterLengthWindow, font = ('arial', 16), fg = self.col['labelfg'], width = 10,
-															 geom = self.set_geom(row = 0, column = 1, sticky = E))
+		self.lengthLogicButton = self.new_Button(self.filterLengthWindow, font=('arial', res.sy(16)), fg=self.col['labelfg'], width=res.sx(10),
+															 geom=self.set_geom(row=0, column=1, sticky=E))
 
 
-		self.filterTagsWindow = self.new_Frame(self.filterCheckButtonsFrame, width = 390, height = 110, bg = self.col['filterbg'],
-															geom = self.set_geom(row = 3, column = 0, freeze = 1))
+		self.filterTagsWindow = self.new_Frame(self.filterCheckButtonsFrame, width=res.sx(390), height=res.sy(110), bg=self.col['filterbg'],
+															geom=self.set_geom(row=3, column=0, freeze=1))
 
-		self.filterTagsTitle = self.new_Label(self.filterTagsWindow, text = 'Filter Tag(s)', font = ('arial', 20), 
-															 bg = self.col['filterbg'], fg = self.col['labelfg'],
-															 geom = self.set_geom(row = 0, column = 0, padx = 10, pady = 12))
-
-
-		self.filterTagsButton = self.new_Button(self.filterTagsWindow, text = 'Tags', font = ('arial', 16),
-															 bg = self.col['tags btn'], fg = self.col['labelfg'],
-															 command = lambda: open_tags_window(mainMenu.tagsList, bg = '#0d0613', invoke = self.update_tag_filter),
-															 geom = self.set_geom(row = 0, column = 1, padx = 5))
-
-		self.tagsLogicButton = self.new_Button(self.filterTagsWindow, font = ('arial', 16), width = 10, fg = self.col['labelfg'],
-															geom = self.set_geom(row = 0, column = 2, padx = 5))
-
-		self.displayTagsWindow = self.new_Frame(self.filterTagsWindow, bg = self.col['disp tags win'], width = 218, height = 40,
-															 geom = self.set_geom(row = 1, column = 0, columnspan = 2, padx = 5, freeze = 1))
-
-		self.displayTagsFrame = self.new_Frame(self.displayTagsWindow, bg = self.col['disp tags bg'], width = 216, height = 38,
-															geom = self.set_geom(row = 0, column = 0, padx = 1, pady = 1, freeze = 1))
-
-		self.tagsStatusWindow = self.new_Frame(self.filterTagsWindow, bg = self.col['disp tags win'], width = 127, height = 40,
-															geom = self.set_geom(row = 1, column = 2, freeze = 1))
-
-		self.tagsStatusLabel = self.new_Label(self.tagsStatusWindow, bg = self.col['disp tags bg'], width = 7, font = ('arial', 19),
-														  geom = self.set_geom(row = 0, column = 0, padx = 1, pady = 1, ipadx = 7, ipady = 2))
+		self.filterTagsTitle = self.new_Label(self.filterTagsWindow, text='Filter Tag(s)', font=('arial', res.sy(20)), 
+															 bg=self.col['filterbg'], fg=self.col['labelfg'],
+															 geom=self.set_geom(row=0, column=0, padx=res.sx(10), pady=res.sy(12)))
 
 
-		self.showFilterInfoWindow = self.new_Frame(self.filterWindow, bg = self.col['filterwin'], width = 740, height = 300,
-																 geom = self.set_geom(row = 1, column = 1, sticky = S, columnspan = 2, freeze = 1))
-		self.showFilterInfoFrame = self.new_Frame(self.showFilterInfoWindow, bg = '#000000', width = 730, height = 290,
-																geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5, freeze = 1))
+		self.filterTagsButton = self.new_Button(self.filterTagsWindow, text='Tags', font=('arial', res.sy(16)),
+															 bg=self.col['tags btn'], fg=self.col['labelfg'],
+															 command=lambda: open_tags_window(mainMenu.tagsList, bg='#0d0613', invoke=self.update_tag_filter),
+															 geom=self.set_geom(row=0, column=1, padx=res.sx(5)))
+
+		self.tagsLogicButton = self.new_Button(self.filterTagsWindow, font=('arial', res.sy(16)), width=res.sx(10), fg=self.col['labelfg'],
+															geom=self.set_geom(row=0, column=2, padx=res.sx(5)))
+
+		self.displayTagsWindow = self.new_Frame(self.filterTagsWindow, bg=self.col['disp tags win'], width=res.sx(218), height=res.sy(40),
+															 geom=self.set_geom(row=1, column=0, columnspan=2, padx=res.sx(5), freeze=1))
+
+		self.displayTagsFrame = self.new_Frame(self.displayTagsWindow, bg=self.col['disp tags bg'], width=res.sx(216), height=res.sy(38),
+															geom=self.set_geom(row=0, column=0, padx=res.sx(1), pady=res.sy(1), freeze=1))
+
+		self.tagsStatusWindow = self.new_Frame(self.filterTagsWindow, bg=self.col['disp tags win'], width=res.sx(127), height=res.sy(40),
+															geom=self.set_geom(row=1, column=2, freeze=1))
+
+		self.tagsStatusLabel = self.new_Label(self.tagsStatusWindow, bg=self.col['disp tags bg'], width=res.sx(7), font=('arial', res.sy(19)),
+														  geom=self.set_geom(row=0, column=0, padx=res.sx(1), pady=res.sy(1), ipadx=res.sx(7), ipady=res.sy(2)))
 
 
-		self.filterInfoTitle = self.new_Label(self.showFilterInfoFrame, text = '', bg = '#000000', font = ('times', 36), width = 20, anchor = W,
-														  geom = self.set_geom(row = 0, column = 0, padx = 10, pady = 10, ipadx = 9, sticky = W))
-
-		self.filterWordsFrame = self.new_Frame(self.showFilterInfoFrame, bg = '#000000', width = 565, height = 200,
-															geom = self.set_geom(row = 1, column = 0, padx = 10, freeze = 1))
-
-		self.filterKanaLabel = self.new_Label(self.filterWordsFrame, bg = '#000000', font = ('arial', 20),
-														  geom = self.set_geom(row = 0, column = 0))
-
-		self.filterEngLabel = self.new_Label(self.filterWordsFrame, bg = '#000000', font = ('arial', 20),
-														 geom = self.set_geom(row = 0, column = 1))
-
-		self.filterTagsFrame = self.new_Frame(self.showFilterInfoFrame, bg = '#000000', width = 135, height = 200,
-														  geom = self.set_geom(row = 1, column = 1, columnspan = 2, sticky = W, freeze = 1))
-
-		self.filterTagsLabel = self.new_Label(self.filterTagsFrame, bg = '#000000', font = ('arial', 16), width = 10,
-														  geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5))
-
-		self.filterGradeLabel = self.new_Label(self.showFilterInfoFrame, bg = '#000000', font = ('arial', 36), width = 2,
-															geom = self.set_geom(row = 0, column = 1, sticky = W))
-		self.filterJlptLabel = self.new_Label(self.showFilterInfoFrame, bg = '#000000', font = ('arial', 36), width = 2,
-														  geom = self.set_geom(row = 0, column = 2, padx = 10, sticky = W))
+		self.showFilterInfoWindow = self.new_Frame(self.filterWindow, bg=self.col['filterwin'], width=res.sx(740), height=res.sy(300),
+																 geom=self.set_geom(row=1, column=1, sticky=S, columnspan=2, freeze=1))
+		self.showFilterInfoFrame = self.new_Frame(self.showFilterInfoWindow, bg='#000000', width=res.sx(730), height=res.sy(290),
+																geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5), freeze=1))
 
 
-		self.massFilteringWindow = self.new_Frame(self.filterWindow, width = 340, height = 465, bg = self.col['filterwin'],
-																geom = self.set_geom(row = 0, column = 2, sticky = N, pady = 10, rowspan = 2, freeze = 1))
+		self.filterInfoTitle = self.new_Label(self.showFilterInfoFrame, text='', bg='#000000', font=('times', res.sy(36)), width=res.sx(20), anchor=W,
+														  geom=self.set_geom(row=0, column=0, padx=res.sx(10), pady=res.sy(10), ipadx=res.sx(9), sticky=W))
 
-		self.massFilteringFrame = self.new_Frame(self.massFilteringWindow, width = 335, height = 130, bg = self.col['filterbg'],
-															  geom = self.set_geom(row = 0, column = 0, pady = 5, freeze = 1))
+		self.filterWordsFrame = self.new_Frame(self.showFilterInfoFrame, bg='#000000', width=res.sx(565), height=res.sy(200),
+															geom=self.set_geom(row=1, column=0, padx=res.sx(10), freeze=1))
 
-		self.groupingModeButton = self.new_Button(self.massFilteringFrame, text = 'Union', font = ('arial', 14), width = 9,
-																command = self.toggle_grouping_mode,
-																geom = self.set_geom(row = 1, column = 0, padx = 10, pady = 40, rowspan = 2),
-																state = DISABLED)
+		self.filterKanaLabel = self.new_Label(self.filterWordsFrame, bg='#000000', font=('arial', res.sy(20)),
+														  geom=self.set_geom(row=0, column=0))
 
-		self.incAllButton = self.new_Button(self.massFilteringFrame, text = 'Inc All', font = ('arial', 14), width = 6, 
-															 bg = self.col['all bg'], fg = self.col['inc fg'],
-															 command = lambda: self.adjust_filter('all', 'inc'),
-															 geom = self.set_geom(row = 1, column = 1, pady = 8))
-		self.excAllButton = self.new_Button(self.massFilteringFrame, text = 'Exc All', font = ('arial', 14), width = 6, 
-															 bg = self.col['all bg'], fg = self.col['exc fg'],
-															 command = lambda: self.adjust_filter('all', 'exc'),
-															 geom = self.set_geom(row = 2, column = 1))
-		self.incShownButton = self.new_Button(self.massFilteringFrame, text = 'Inc Shown', font = ('arial', 14), width = 9, 
-															 bg = self.col['shown bg'], fg = self.col['inc fg'],
-															 command = lambda: self.adjust_filter('shown', 'inc'),
-															 geom = self.set_geom(row = 1, column = 2, padx = 10))
-		self.excShownButton = self.new_Button(self.massFilteringFrame, text = 'Exc Shown', font = ('arial', 14), width = 9, 
-															 bg = self.col['shown bg'], fg = self.col['exc fg'],
-															 command = lambda: self.adjust_filter('shown', 'exc'),
-															 geom = self.set_geom(row = 2, column = 2))
+		self.filterEngLabel = self.new_Label(self.filterWordsFrame, bg='#000000', font=('arial', res.sy(20)),
+														 geom=self.set_geom(row=0, column=1))
 
-		self.difficultyWindow = self.new_Frame(self.massFilteringWindow, width = 335, height = 320, bg = self.col['filterbg'],
-															geom = self.set_geom(row = 1, column = 0, freeze = 1))
+		self.filterTagsFrame = self.new_Frame(self.showFilterInfoFrame, bg='#000000', width=res.sx(135), height=res.sy(200),
+														  geom=self.set_geom(row=1, column=1, columnspan=2, sticky=W, freeze=1))
 
-		self.timerWindow = self.new_Frame(self.difficultyWindow, width = 255, height = 46, bg = self.col['timerbg'],
-													 geom = self.set_geom(row = 0, column = 0, freeze = 1))
-		self.timerFrame = self.new_Frame(self.timerWindow, width = 166, height = 40, bg = '#000000',
-													geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 3, freeze = 1))
+		self.filterTagsLabel = self.new_Label(self.filterTagsFrame, bg='#000000', font=('arial', res.sy(16)), width=res.sx(10),
+														  geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5)))
+
+		self.filterGradeLabel = self.new_Label(self.showFilterInfoFrame, bg='#000000', font=('arial', res.sy(36)), width=res.sx(2),
+															geom=self.set_geom(row=0, column=1, sticky=W))
+		self.filterJlptLabel = self.new_Label(self.showFilterInfoFrame, bg='#000000', font=('arial', res.sy(36)), width=res.sx(2),
+														  geom=self.set_geom(row=0, column=2, padx=res.sx(10), sticky=W))
+
+
+
+
+
+
+		self.massFilteringWindow = self.new_Frame(self.filterWindow, width=res.sx(340), height=res.sy(465), bg=self.col['filterwin'],
+																geom=self.set_geom(row=0, column=2, sticky=N, pady=res.sy(10), rowspan=2, freeze=1))
+
+		self.massFilteringFrame = self.new_Frame(self.massFilteringWindow, width=res.sx(335), height=res.sy(130), bg=self.col['filterbg'],
+															  geom=self.set_geom(row=0, column=0, pady=res.sy(5), freeze=1))
+
+		self.groupingModeButton = self.new_Button(self.massFilteringFrame, text='Union', font=('arial', res.sy(14)), width=res.sx(9),
+																command=self.toggle_grouping_mode,
+																geom=self.set_geom(row=1, column=0, padx=res.sx(10), pady=res.sy(40), rowspan=2),
+																state=DISABLED)
+
+		self.incAllButton = self.new_Button(self.massFilteringFrame, text='Inc All', font=('arial', res.sy(14)), width=res.sx(6), 
+															 bg=self.col['all bg'], fg=self.col['inc fg'],
+															 command=lambda: self.adjust_filter('all', 'inc'),
+															 geom=self.set_geom(row=1, column=1, pady=res.sy(8)))
+		self.excAllButton = self.new_Button(self.massFilteringFrame, text='Exc All', font=('arial', res.sy(14)), width=res.sx(6), 
+															 bg=self.col['all bg'], fg=self.col['exc fg'],
+															 command=lambda: self.adjust_filter('all', 'exc'),
+															 geom=self.set_geom(row=2, column=1))
+		self.incShownButton = self.new_Button(self.massFilteringFrame, text='Inc Shown', font=('arial', res.sy(14)), width=res.sx(9), 
+															 bg=self.col['shown bg'], fg=self.col['inc fg'],
+															 command=lambda: self.adjust_filter('shown', 'inc'),
+															 geom=self.set_geom(row=1, column=2, padx=res.sx(10)))
+		self.excShownButton = self.new_Button(self.massFilteringFrame, text='Exc Shown', font=('arial', res.sy(14)), width=res.sx(9), 
+															 bg=self.col['shown bg'], fg=self.col['exc fg'],
+															 command=lambda: self.adjust_filter('shown', 'exc'),
+															 geom=self.set_geom(row=2, column=2))
+
+		self.difficultyWindow = self.new_Frame(self.massFilteringWindow, width=res.sx(335), height=res.sy(320), bg=self.col['filterbg'],
+															geom=self.set_geom(row=1, column=0, freeze=1))
+
+		self.timerWindow = self.new_Frame(self.difficultyWindow, width=res.sx(255), height=res.sy(46), bg=self.col['timerbg'],
+													 geom=self.set_geom(row=0, column=0, freeze=1))
+		self.timerFrame = self.new_Frame(self.timerWindow, width=res.sx(166), height=res.sy(40), bg='#000000',
+													geom=self.set_geom(row=0, column=0, padx=res.sx(3), pady=res.sy(3), freeze=1))
+
 
 		#configurable by time
 		self.timerLabel = self.new_Label(self.timerFrame, width = 10, font = ('arial', 18), anchor = W, bg = '#000000', fg = '#ffffff',
@@ -1047,73 +1274,78 @@ class gameSettings_interface(client.Window):
 		self.recoverFrame = self.new_Frame(self.recoverWindow, width = 247, height = 40, bg = '#000000',
 														geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 3, columnspan = 2, freeze = 1))
 
-		#configurable by recover
-		self.recoverLabel = self.new_Label(self.recoverFrame, width = 12, font = ('arial', 18), anchor = W, bg = '#000000', fg = '#ffffff',
-													  geom = self.set_geom(row = 0, column = 0, pady = 4))
+				# configurable by recover
+		self.recoverLabel = self.new_Label(self.recoverFrame, width=res.sx(12), font=('arial', res.sy(18)), anchor=W, bg='#000000', fg='#ffffff',
+													  geom=self.set_geom(row=0, column=0, pady=res.sy(4)))
 
-		self.addRecoverButton = self.new_Button(self.recoverWindow, text = '+', font = ('arial', 15), width = 2, bg = '#000000', fg = self.col['recoverbg'], 
-															 command = lambda: self.configure_recover(1),
-															 geom = self.set_geom(row = 1, column = 1, padx = 3, ipadx = 2, sticky = E))
-		self.takeRecoverButton = self.new_Button(self.recoverWindow, text = '-', font = ('arial', 15), width = 2, bg = '#000000', fg = self.col['recoverbg'], 
-															  command = lambda: self.configure_recover(-1),
-															  geom = self.set_geom(row = 1, column = 1, padx = 42, ipadx = 2, sticky = E))
+		self.addRecoverButton = self.new_Button(self.recoverWindow, text='+', font=('arial', res.sy(15)), width=res.sx(2), bg='#000000', fg=self.col['recoverbg'], 
+															 command=lambda: self.configure_recover(1),
+															 geom=self.set_geom(row=1, column=1, padx=res.sx(3), ipadx=res.sx(2), sticky=E))
+		self.takeRecoverButton = self.new_Button(self.recoverWindow, text='-', font=('arial', res.sy(15)), width=res.sx(2), bg='#000000', fg=self.col['recoverbg'], 
+															  command=lambda: self.configure_recover(-1),
+															  geom=self.set_geom(row=1, column=1, padx=res.sx(42), ipadx=res.sx(2), sticky=E))
 
-		self.languageWindow = self.new_Frame(self.difficultyWindow, width = 255, height = 65, bg = self.col['inactive language fg'],
-														geom = self.set_geom(row = 3, column = 0, freeze = 1))
-		self.languageFrame = self.new_Frame(self.languageWindow, width = 247, height = 59, bg = '#000000',
-														geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 3, freeze = 1))
+		self.languageWindow = self.new_Frame(self.difficultyWindow, width=res.sx(255), height=res.sy(65), bg=self.col['inactive language fg'],
+														geom=self.set_geom(row=3, column=0, freeze=1))
+		self.languageFrame = self.new_Frame(self.languageWindow, width=res.sx(247), height=res.sy(59), bg='#000000',
+														geom=self.set_geom(row=0, column=0, padx=res.sx(3), pady=res.sy(3), freeze=1))
 
-		self.languageButtons = {'jap': self.new_Button(self.languageFrame, text = 'あ', font = ('arial', 19), width = 4, fg = self.col['inactive language fg'], bg = self.col['inactive language bg'], command = lambda: self.select_language('jap'),
-																	  geom = self.set_geom(row = 0, column = 0, padx = 9, pady = 5)),
-										'eng': self.new_Button(self.languageFrame, text = 'A', font = ('arial', 19), width = 4, fg = self.col['inactive language fg'], bg = self.col['inactive language bg'], command = lambda: self.select_language('eng'),
-																	  geom = self.set_geom(row = 0, column = 1)),
-										'both': self.new_Button(self.languageFrame, text = 'あ/A', font = ('arial', 19), width = 4, fg = self.col['inactive language fg'], bg = self.col['inactive language bg'], command = lambda: self.select_language('both'),
-																		geom = self.set_geom(row = 0, column = 2, padx = 9))}
+		self.languageButtons = {
+			'jap': self.new_Button(self.languageFrame, text='あ', font=('arial', res.sy(19)), width=res.sx(4), fg=self.col['inactive language fg'], bg=self.col['inactive language bg'], command=lambda: self.select_language('jap'),
+																	  geom=self.set_geom(row=0, column=0, padx=res.sx(9), pady=res.sy(5))),
+			'eng': self.new_Button(self.languageFrame, text='A', font=('arial', res.sy(19)), width=res.sx(4), fg=self.col['inactive language fg'], bg=self.col['inactive language bg'], command=lambda: self.select_language('eng'),
+																	  geom=self.set_geom(row=0, column=1)),
+			'both': self.new_Button(self.languageFrame, text='あ/A', font=('arial', res.sy(19)), width=res.sx(4), fg=self.col['inactive language fg'], bg=self.col['inactive language bg'], command=lambda: self.select_language('both'),
+																		geom=self.set_geom(row=0, column=2, padx=res.sx(9)))
+		}
 
-		self.repetitionWindow = self.new_Frame(self.difficultyWindow, width = 80, height = 247, bg = self.col['repetitionbg'],
-															geom = self.set_geom(row = 0, column = 1, rowspan = 4, freeze = 1))
-		self.repetitionFrame = self.new_Frame(self.repetitionWindow, width = 74, height = 241, bg = '#000000',
-														  geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 3, freeze = 1))
+		self.repetitionWindow = self.new_Frame(self.difficultyWindow, width=res.sx(80), height=res.sy(247), bg=self.col['repetitionbg'],
+															geom=self.set_geom(row=0, column=1, rowspan=4, freeze=1))
+		self.repetitionFrame = self.new_Frame(self.repetitionWindow, width=res.sx(74), height=res.sy(241), bg='#000000',
+														  geom=self.set_geom(row=0, column=0, padx=res.sx(3), pady=res.sy(3), freeze=1))
 
-		#configurable by repetition
-		self.repetitionLabel = self.new_Label(self.repetitionFrame, font = ('arial', 11), width = 7, fg = self.col['repetitionbg'], bg = '#000000',
-														  geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 5))
+		# configurable by repetition
+		self.repetitionLabel = self.new_Label(self.repetitionFrame, font=('arial', res.sy(11)), width=res.sx(7), fg=self.col['repetitionbg'], bg='#000000',
+														  geom=self.set_geom(row=0, column=0, padx=res.sx(3), pady=res.sy(5)))
 
-		#configurable by repetition
-		self.repetitionScale = self.new_Scale(self.repetitionFrame, from_ = 0, to = 0, length = 150, showvalue = 0, orient = VERTICAL,
-														  command = self.configure_repetition,
-														  geom = self.set_geom(row = 1, column = 0))
+		# configurable by repetition
+		self.repetitionScale = self.new_Scale(self.repetitionFrame, from_=0, to=0, length=res.sy(150), showvalue=0, orient=VERTICAL,
+														  command=self.configure_repetition,
+														  geom=self.set_geom(row=1, column=0))
 
+		# frame containing button to set configuration to default
+		self.presetsFrame = self.new_Frame(self.difficultyWindow, width=res.sx(325), height=res.sy(70), bg=self.col['filterbg'],
+													  geom=self.set_geom(row=4, column=0, freeze=1, columnspan=2))
 
-		#frame containing button to set configuration to default
-		self.presetsFrame = self.new_Frame(self.difficultyWindow, width = 325, height = 70, bg = self.col['filterbg'],
-													  geom = self.set_geom(row = 4, column = 0, freeze = 1, columnspan = 2))
+		self.newPresetButton = self.new_Button(self.presetsFrame, text='New preset', font=('arial', res.sy(16)), bg=self.col['new preset bg'], 
+															command=lambda: self.open_preset_window(1),
+															geom=self.set_geom(row=0, column=0, padx=res.sx(20)))
 
-		self.newPresetButton = self.new_Button(self.presetsFrame, text = 'New preset', font = ('arial', 16), bg = self.col['new preset bg'], 
-															command = lambda: self.open_preset_window(1),
-															geom = self.set_geom(row = 0, column = 0, padx = 20))
+		self.openPresetsButton = self.new_Button(self.presetsFrame, text='Open presets', font=('arial', res.sy(16)), bg=self.col['open presets bg'], 
+															  command=self.open_preset_window, 
+															  geom=self.set_geom(row=0, column=1, pady=res.sy(16)))
 
-		self.openPresetsButton = self.new_Button(self.presetsFrame, text = 'Open presets', font = ('arial', 16), bg = self.col['open presets bg'], 
-															  command = self.open_preset_window, 
-															  geom = self.set_geom(row = 0, column = 1, pady = 16))
+		# frame containing the play and back buttons
+		self.transitionsFrame = self.new_Frame(self.mainWin, width=res.sx(200), height=res.sy(800), bg=self.col['transitionsbg'],
+															geom=self.set_geom(row=0, column=2, padx=res.sx(10), sticky=N, freeze=1))
 
-		#frame containing the play and back buttons
-		self.transitionsFrame = self.new_Frame(self.mainWin, width = 200, height = 800, bg = self.col['transitionsbg'],
-															geom = self.set_geom(row = 0, column = 2, padx = 10, sticky = N, freeze = 1))
+		self.userLabel = self.new_Label(self.transitionsFrame, font=('helvatica', res.sy(20)), bg=self.col['transitionsbg'], fg='#ffffff',
+												  geom=self.set_geom(row=0, column=0, pady=res.sy(10)))
 
+		# Press this button to start the flashcard game with configured settings
+		self.playButton = self.new_Button(self.transitionsFrame, text='Play', font=('arial', res.sy(20)), bg='#0054a8', fg='#ff80ff', width=res.sx(6), 
+													 command=lambda: self.execute_transition('play'),
+													 geom=self.set_geom(row=1, column=0, padx=res.sx(50), pady=res.sy(20)))
+		self.backButton = self.new_Button(self.transitionsFrame, text='Back', font=('arial', res.sy(20)), bg='#0054a8', fg='#ff80ff', width=res.sx(6), 
+													 command=lambda: self.execute_transition('main'),
+													 geom=self.set_geom(row=2, column=0))
 
-		self.userLabel = self.new_Label(self.transitionsFrame, font = ('helvatica', 20), bg = self.col['transitionsbg'], fg = '#ffffff',
-												  geom = self.set_geom(row = 0, column = 0, pady = 10))
-
-		#Press this button start the flashcard game with configured settings
-		self.playButton = self.new_Button(self.transitionsFrame, text = 'Play', font = ('arial', 20), bg = '#0054a8', fg = '#ff80ff', width = 6, 
-													 command = lambda: self.execute_transition('play'),
-													 geom = self.set_geom(row = 1, column = 0, padx = 50, pady = 20))
-		self.backButton = self.new_Button(self.transitionsFrame, text = 'Back', font = ('arial', 20), bg = '#0054a8', fg = '#ff80ff', width = 6, 
-													 command = lambda: self.execute_transition('main'),
-													 geom = self.set_geom(row = 2, column = 0))
 
 		self.flahscardFg = {}
+
+
+
+
 
 	def execute_transition(self, destination):
 		self.unbind_editable_labels()
@@ -1169,11 +1401,6 @@ class gameSettings_interface(client.Window):
 		#binding time / live / recover labels
 
 		self.bind_editable_labels()
-
-
-
-
-
 
 
 	def bind_editable_labels(self):
@@ -1347,7 +1574,7 @@ class gameSettings_interface(client.Window):
 				self.tagsStatusLabel.config(text = '')
 
 		defaultTagsDisplay = []
-		self.tagsDisplays = {'T_' + tag[0]: Frame(self.displayTagsFrame, width = 10, height = 10, bg = tag[1]) for tag in mainMenu.tagsList}
+		self.tagsDisplays = {'T_' + tag[0]: Frame(self.displayTagsFrame, width = res.sx(10), height = res.sy(10), bg = tag[1]) for tag in mainMenu.tagsList}
 
 		for num, tag in enumerate(self.tagsDisplays):
 			self.tagsDisplays[tag].bind('<Enter>', lambda e, tag = tag, col = mainMenu.tagsList[num][1]: display_tag_name(e, tag, col, 1))
@@ -1560,12 +1787,12 @@ class gameSettings_interface(client.Window):
 			elif (pair[0] in tagsList) and not (tagFilter in self.filtersList):
 				self.filtersList.append(tagFilter)
 				newDefault.append(pair[0])
-				self.tagsDisplays[tagFilter].grid(row = row, column = column, padx = 4, pady = 4)
+				self.tagsDisplays[tagFilter].grid(row = row, column = column, padx = res.sx(4), pady = res.sy(4))
 				counter += 1
 
 			elif (pair[0] in tagsList) and (tagFilter in self.filtersList):
 				newDefault.append(pair[0])
-				self.tagsDisplays[tagFilter].grid_configure(row = row, column = column, padx = 4, pady = 4)
+				self.tagsDisplays[tagFilter].grid_configure(row = row, column = column, padx = res.sx(4), pady = res.sy(4))
 				counter += 1
 
 		self.filterTagsButton.config(command = lambda: open_tags_window(mainMenu.tagsList, bg = '#0d0613',
@@ -1643,8 +1870,8 @@ gameSettings = gameSettings_interface(root, bg = '#000000')
 
 class filter_label(gameSettings_interface):
 
-	engSizes = get_char_pixels(20)
-	engsWidth = 493
+	engSizes = get_char_pixels(res.sy(20))
+	engsWidth = res.sx(493)
 
 	def __init__(self, kanji, words, viewer, grade, jlpt, tags, filters, swaps, logics, dispWidgets, mode):
 
@@ -1667,12 +1894,12 @@ class filter_label(gameSettings_interface):
 
 		kanas, engs = [kana for kana in words], [words[kana] for kana in words]
 
-		self.kanaText = format_kana(kanas, width = 4)
-		self.engText = format_english(engs, pixels = filter_label.engSizes, maxWidth = filter_label.engsWidth)
+		self.kanaText = format_kana(kanas, width = res.sx(4))
+		self.engText = format_english(engs, pixels = filter_label.engSizes, maxWidth = res.sx(filter_label.engsWidth))
 
 		tagsList = [tag for tag in filters if tag[0] == 'T']
 		self.tagsText = ''.join([tag[2:] + ('\n' if num != len(tags) else '') for (num, tag) in enumerate(tags, start = 1)])
-		self.label = Label(self.viewer, text = self.kanji[0], font = ('times', 28),
+		self.label = Label(self.viewer, text = self.kanji[0], font = ('times', res.sy(28)),
 								 bg = '#000000', fg = self.get_status(filters, tagsList, logicFilters, swaps, mode = mode))
 
 		self.label.bind('<Enter>', lambda _: self.highlight(1))
@@ -1735,15 +1962,15 @@ class filter_label(gameSettings_interface):
 		column = wantedColumns - count // rows
 
 		if repositioning:
-			self.label.grid_configure(row = row, column = column, ipadx = 3, ipady = 3)
+			self.label.grid_configure(row = row, column = column, ipadx = res.sx(3), ipady = res.sy(3))
 
 		else:
-			self.label.grid(row = row, column = column, ipadx = 3, ipady = 3)
+			self.label.grid(row = row, column = column, ipadx = res.sx(3), ipady = res.sy(3))
 
 	def highlight(self, num):
 
 		self.label.config(fg = self.highlightFg if num == 1 else self.currentFg,
-								font = ('arial', 28, 'bold') if num == 1 else ('times', 28))
+								font = ('arial', res.sy(28), 'bold') if num == 1 else ('times', res.sy(28)))
 
 		padding = 2 if num == 1 else 3
 		self.label.grid_configure(ipadx = padding, ipady = padding)
@@ -1830,49 +2057,47 @@ class History:
 		recordBg = {'none': '#ff9999', 'partial': '#ffff99', 'full': '#99ff99'}[self.credit]
 		recordFg = {'none': '#800000', 'partial': '#808000', 'full': '#008000'}[self.credit]
 
-		self.recordFrame = Frame(self.win, width = 350, height = 200, bg = recordBg)
-		self.statusFrame = Frame(self.recordFrame, bg = recordBg)
-		self.kanjiLabel = Label(self.recordFrame, text = f"{self.pos}: {self.kanji}", font = ('helvatica', 26), bg = recordBg, fg = recordFg)
+		self.recordFrame = Frame(self.win, width=res.sx(350), height=res.sy(200), bg=recordBg)
+		self.statusFrame = Frame(self.recordFrame, bg=recordBg)
+		self.kanjiLabel = Label(self.recordFrame, text=f"{self.pos}: {self.kanji}", font=('helvatica', res.sy(26)), bg=recordBg, fg=recordFg)
 
 		if self.language in ('jap', 'eng'):
 			creditText = u'\u2b55' if self.status == 1 else u'\u274c'
-			self.status = Label(self.statusFrame, text = creditText, font = ('helvatica', 30), bg = recordBg, fg = recordFg, width = 2)
-
+			self.status = Label(self.statusFrame, text=creditText, font=('helvatica', res.sy(30)), bg=recordBg, fg=recordFg, width=res.sx(2))
 		else:
-			#2b55: '⭕️', 274c: '❌'
+			# 2b55: '⭕️', 274c: '❌'
 			kanaCreditText = u'\u2b55' if self.status[0] == 1 else u'\u274c'
 			engCreditText = u'\u2b55' if self.status[1] == 1 else u'\u274c'
-			self.kanaStatus = Label(self.statusFrame, text = kanaCreditText, font = ('helvatica', 30), bg = recordBg, fg = recordFg, width = 2)
-			self.engStatus = Label(self.statusFrame, text = engCreditText, font = ('helvatica', 30), bg = recordBg, fg = recordFg, width = 2)	
+			self.kanaStatus = Label(self.statusFrame, text=kanaCreditText, font=('helvatica', res.sy(30)), bg=recordBg, fg=recordFg, width=res.sx(2))
+			self.engStatus = Label(self.statusFrame, text=engCreditText, font=('helvatica', res.sy(30)), bg=recordBg, fg=recordFg, width=res.sx(2))
 
-		self.answersFrame = Frame(self.recordFrame, width = 350, height = 120, bg = recordBg)
+		self.answersFrame = Frame(self.recordFrame, width=res.sx(350), height=res.sy(120), bg=recordBg)
 		answerText = ''
 		for kana in self.answers:
 			engtext = ', '.join(self.answers[kana])
 			answerText += f"{kana}: {engtext}\n"
 		answerText = answerText.rstrip('\n')
 
-		self.answersLabel = Label(self.answersFrame, text = answerText, font = ('helvatica', 18), bg = recordBg, fg = recordFg,
-										  anchor = W, justify = LEFT)
+		self.answersLabel = Label(self.answersFrame, text=answerText, font=('helvatica', res.sy(18)), bg=recordBg, fg=recordFg,
+										  anchor=W, justify=LEFT)
 
 	def display(self, num):
-
 		self.recordFrame.grid_propagate(0)
 		self.answersFrame.grid_propagate(0)
 
-		self.kanjiLabel.grid(row = 0, column = 0, padx = 3, sticky = W)
-		self.answersLabel.grid(row = 0, column = 0, padx = 5, pady = 10)
-		self.answersFrame.grid(row = 1, column = 0, columnspan = 2)
+		self.kanjiLabel.grid(row=0, column=0, padx=res.sx(3), sticky=W)
+		self.answersLabel.grid(row=0, column=0, padx=res.sx(5), pady=res.sy(10))
+		self.answersFrame.grid(row=1, column=0, columnspan=2)
 
 		if self.language == 'both':
-			self.kanaStatus.grid(row = 0, column = 0, padx = 5, pady = 5)
-			self.engStatus.grid(row = 0, column = 1)
-
+			self.kanaStatus.grid(row=0, column=0, padx=res.sx(5), pady=res.sy(5))
+			self.engStatus.grid(row=0, column=1)
 		else:
-			self.status.grid(row = 0, column = 0, padx = 5, pady = 5)
+			self.status.grid(row=0, column=0, padx=res.sx(5), pady=res.sy(5))
 
-		self.statusFrame.grid(row = 0, column = 1, padx = 3, pady = 3, sticky = E)
-		self.recordFrame.grid(row = num, column = 0, padx = 5, pady = 5)
+		self.statusFrame.grid(row=0, column=1, padx=res.sx(3), pady=res.sy(3), sticky=E)
+		self.recordFrame.grid(row=num, column=0, padx=res.sx(5), pady=res.sy(5))
+
 
 class Accounts(client.Window):
 
@@ -1883,73 +2108,146 @@ class Accounts(client.Window):
 		self.col['frames bg'] = '#450000'
 		self.col['normal fg'] = '#e0b8b8'
 
-		self.userTitleLabel = self.new_Label(self.mainWin, font = ('times', 32), text = 'Users Hub', width = 10,
-														 bg = self.col['frames bg'], fg = self.col['normal fg'],
-														 geom = self.set_geom(manager = 'pack', padx = 10, pady = 10))
+		self.userTitleLabel = self.new_Label(
+			self.mainWin,
+			font=('times', res.sy(32)),
+			text='Users Hub',
+			width=res.sx(10),
+			bg=self.col['frames bg'],
+			fg=self.col['normal fg'],
+			geom=self.set_geom(manager='pack', padx=res.sx(10), pady=res.sy(10))
+		)
 
-		self.usersListFrame = self.new_Frame(self.mainWin, width = 300, height = 600, bg = self.col['frames bg'],
-														 geom = self.set_geom(manager = 'pack', padx = 10, freeze = 1))
+		self.usersListFrame = self.new_Frame(
+			self.mainWin,
+			width=res.sx(300),
+			height=res.sy(600),
+			bg=self.col['frames bg'],
+			geom=self.set_geom(manager='pack', padx=res.sx(10), freeze=1)
+		)
 
+		self.loggedinFrame = self.new_Frame(
+			self.usersListFrame,
+			bg=self.col['frames bg'],
+			geom=self.set_geom(manager='pack', padx=res.sx(10), pady=res.sy(10), hidden=1)
+		)
 
+		self.loggedInTitle = self.new_Label(
+			self.loggedinFrame,
+			font=('times', res.sy(18)),
+			bg=self.col['frames bg'],
+			fg=self.col['normal fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(10), pady=res.sy(10))
+		)
 
-		self.loggedinFrame = self.new_Frame(self.usersListFrame, bg = self.col['frames bg'],
-														geom = self.set_geom(manager = 'pack', padx = 10, pady = 10, hidden = 1))
+		self.logoutButton = self.new_Button(
+			self.loggedinFrame,
+			text='Logout',
+			font=('times', res.sy(14)),
+			width=res.sx(7),
+			bg=self.col['normal fg'],
+			fg='#000000',
+			command=self.logout,
+			geom=self.set_geom(row=0, column=1)
+		)
 
-		self.loggedInTitle = self.new_Label(self.loggedinFrame, font = ('times', 18), bg = self.col['frames bg'], fg = self.col['normal fg'],
-														geom = self.set_geom(row = 0, column = 0, padx = 10, pady = 10))
+		self.setDefaultButton = self.new_Button(
+			self.loggedinFrame,
+			text='Set default',
+			font=('times', res.sy(14)),
+			width=res.sx(8),
+			bg=self.col['normal fg'],
+			fg='#000000',
+			command=self.set_default_user,
+			geom=self.set_geom(row=1, column=0)
+		)
 
-		self.logoutButton = self.new_Button(self.loggedinFrame, text = 'Logout', font = ('times', 14), width = 7,
-														bg = self.col['normal fg'], fg = '#000000',
-														command = self.logout,
-														geom = self.set_geom(row = 0, column = 1))
+		self.userInputFrame = self.new_Frame(
+			self.usersListFrame,
+			bg=self.col['frames bg'],
+			geom=self.set_geom(manager='pack', padx=res.sx(10), pady=res.sy(10), hidden=1)
+		)
 
-		self.setDefaultButton = self.new_Button(self.loggedinFrame, text = 'Set default', font = ('times', 14), width = 8,
-															 bg = self.col['normal fg'], fg = '#000000',
-															 command = self.set_default_user,
-															 geom = self.set_geom(row = 1, column = 0))
+		self.userInputTitle = self.new_Label(
+			self.userInputFrame,
+			text='Username:',
+			font=('times', res.sy(18)),
+			bg=self.col['frames bg'],
+			fg=self.col['normal fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(8), pady=res.sy(10))
+		)
 
+		self.userInputEntry = self.new_Entry(
+			self.userInputFrame,
+			font=('times', res.sy(18)),
+			width=res.sx(12),
+			justify='left',
+			geom=self.set_geom(row=0, column=1, padx=res.sx(10))
+		)
 
+		self.loginButton = self.new_Button(
+			self.userInputFrame,
+			text='Login',
+			font=('times', res.sy(14)),
+			width=res.sx(7),
+			bg=self.col['normal fg'],
+			fg='#000000',
+			command=lambda: self.login_username(self.get_input(self.userInputEntry)),
+			geom=self.set_geom(row=1, column=1)
+		)
 
-		self.userInputFrame = self.new_Frame(self.usersListFrame, bg = self.col['frames bg'],
-														 geom = self.set_geom(manager = 'pack', padx = 10, pady = 10, hidden = 1))
+		self.passwordFrame = self.new_Frame(
+			self.usersListFrame,
+			bg=self.col['frames bg'],
+			geom=self.set_geom(manager='pack', padx=res.sx(10), pady=res.sy(10), hidden=1)
+		)
 
-		self.userInputTitle = self.new_Label(self.userInputFrame, text = 'Username:', font = ('times', 18),
-														 bg = self.col['frames bg'], fg = self.col['normal fg'],
-														 geom = self.set_geom(row = 0, column = 0, padx = 8, pady = 10))
+		self.passwordTitle = self.new_Label(
+			self.passwordFrame,
+			text='Password:',
+			font=('times', res.sy(18)),
+			bg=self.col['frames bg'],
+			fg=self.col['normal fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(8), pady=res.sy(10))
+		)
 
-		self.userInputEntry = self.new_Entry(self.userInputFrame, font = ('times', 18), width = 12, justify = 'left',
-														 geom = self.set_geom(row = 0, column = 1, padx = 10))
+		self.passwordEntry = self.new_Entry(
+			self.passwordFrame,
+			font=('times', res.sy(18)),
+			width=res.sx(12),
+			justify='left',
+			geom=self.set_geom(row=0, column=1, padx=res.sx(10))
+		)
 
-		self.loginButton = self.new_Button(self.userInputFrame, text = 'Login', font = ('times', 14), width = 7,
-													  bg = self.col['normal fg'], fg = '#000000',
-													  command = lambda: self.login_username(self.get_input(self.userInputEntry)),
-													  geom = self.set_geom(row = 1, column = 1))
+		self.submitPasswordButton = self.new_Button(
+			self.passwordFrame,
+			text='Submit',
+			font=('times', res.sy(14)),
+			width=res.sx(6),
+			bg=self.col['normal fg'],
+			fg='#000000',
+			command=lambda: self.login_password(self.get_input(self.passwordEntry)),
+			geom=self.set_geom(row=1, column=1)
+		)
 
+		self.backFrame = self.new_Frame(
+			self.mainWin,
+			width=res.sx(300),
+			height=res.sy(100),
+			bg=self.col['frames bg'],
+			geom=self.set_geom(manager='pack', pady=res.sy(10), freeze=1)
+		)
 
+		self.backButton = self.new_Button(
+			self.backFrame,
+			text='Back',
+			font=('times', res.sy(20)),
+			bg=self.col['normal fg'],
+			fg='#000000',
+			command=self.back,
+			geom=self.set_geom(manager='pack', pady=res.sy(25), ipady=res.sy(8))
+		)
 
-		self.passwordFrame = self.new_Frame(self.usersListFrame, bg = self.col['frames bg'],
-														geom = self.set_geom(manager = 'pack', padx = 10, pady = 10, hidden = 1))
-
-		self.passwordTitle = self.new_Label(self.passwordFrame, text = 'Password:', font = ('times', 18),
-														bg = self.col['frames bg'], fg = self.col['normal fg'],
-														geom = self.set_geom(row = 0, column = 0, padx = 8, pady = 10))
-
-		self.passwordEntry = self.new_Entry(self.passwordFrame, font = ('times', 18), width = 12, justify = 'left',
-														geom = self.set_geom(row = 0, column = 1, padx = 10))
-
-		self.submitPasswordButton = self.new_Button(self.passwordFrame, text = 'Submit', font = ('times', 14), width = 6,
-													  bg = self.col['normal fg'], fg = '#000000',
-													  command = lambda: self.login_password(self.get_input(self.passwordEntry)),
-													  geom = self.set_geom(row = 1, column = 1))
-
-
-
-		self.backFrame = self.new_Frame(self.mainWin, width = 300, height = 100, bg = self.col['frames bg'],
-												  geom = self.set_geom(manager = 'pack', pady = 10, freeze = 1))
-
-		self.backButton = self.new_Button(self.backFrame, text = 'Back', font = ('times', 20), bg = self.col['normal fg'], fg = '#000000',
-													 command = self.back,
-													 geom = self.set_geom(manager = 'pack', pady = 25, ipady = 8))
 
 		#get all users and their default values
 		self.users = users.get_all_users()

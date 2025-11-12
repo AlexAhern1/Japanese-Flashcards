@@ -4,6 +4,7 @@ from random import choice
 
 from client import Window
 import translator
+import resolution as res
 
 class Game_Interface(Window):
 	FPS = 25 # (frames per second of the game interface)
@@ -21,193 +22,310 @@ class Game_Interface(Window):
 						  ('lives fg', '#99ff66'), ('timer fg', '#40bf40'), ('stats fg', '#33ff88'),
 						  ('retry bg', '#1b321b'), ('return bg', '#321b1b'), ('end fg', '#e7e7e4'))
 
-		#frame containing all records of answered kanji with some details like correct / wrong answer inputs
-		self.historyWindow = self.new_Frame(self.mainWin, width = 400, height = 680, bg = self.col['history win'],
-											geom = self.set_geom(row = 0, column = 0, padx = 5, pady = 5))
-		self.historyFrame = self.new_Frame(self.historyWindow, width = 396, height = 430, bg = self.col['history frm'],
-										   geom = self.set_geom(row = 0, column = 0, padx = 2, pady = 1, freeze = 1, sticky = 's'))
+		# frame containing all records of answered kanji with some details like correct / wrong answer inputs
+		self.historyWindow = self.new_Frame(
+			self.mainWin, width=res.sx(400), height=res.sy(680), bg=self.col['history win'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(5), pady=res.sy(5))
+		)
+		self.historyFrame = self.new_Frame(
+			self.historyWindow, width=res.sx(396), height=res.sy(430), bg=self.col['history frm'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(2), pady=res.sy(1), freeze=1, sticky='s')
+		)
 
-		self.practiceMistakesFrame = self.new_Frame(self.historyWindow, width = 396, height = 60, bg = self.col['history frm'],
-													geom = self.set_geom(row = 1, column = 0, freeze = 1))
+		self.practiceMistakesFrame = self.new_Frame(
+			self.historyWindow, width=res.sx(396), height=res.sy(60), bg=self.col['history frm'],
+			geom=self.set_geom(row=1, column=0, freeze=1)
+		)
 
-		self.practiceMistakesButton = self.new_Button(self.practiceMistakesFrame, text = 'Practice Mistakes', font = ('arial', 16),
-													  bg = '#34192f', fg = '#ddd5d5',
-													  command = lambda: self.practice_mistakes(self.mistakes),
-													  geom = self.set_geom(row = 0, column = 0, padx = 105, pady = 10, hidden = 1))
+		self.practiceMistakesButton = self.new_Button(
+			self.practiceMistakesFrame, text='Practice Mistakes', font=('arial', res.sy(16)),
+			bg='#34192f', fg='#ddd5d5',
+			command=lambda: self.practice_mistakes(self.mistakes),
+			geom=self.set_geom(row=0, column=0, padx=res.sx(105), pady=res.sy(10), hidden=1)
+		)
 
-		self.historyDetailsFrame = self.new_Frame(self.historyWindow, width = 396, height = 184, bg = '#000000',
-												  geom = self.set_geom(row = 2, column = 0, pady = 1, freeze = 1, sticky = 'n'))
+		self.historyDetailsFrame = self.new_Frame(
+			self.historyWindow, width=res.sx(396), height=res.sy(184), bg='#000000',
+			geom=self.set_geom(row=2, column=0, pady=res.sy(1), freeze=1, sticky='n')
+		)
 
-		self.historyKanjiLabel = self.new_Label(self.historyDetailsFrame, font = ('times', 40), bg = '#000000', fg = '#ff4444',
-												geom = self.set_geom(row = 0, column = 0, pady = 3, sticky = 'w'))
+		self.historyKanjiLabel = self.new_Label(
+			self.historyDetailsFrame, font=('times', res.sy(40)), bg='#000000', fg='#ff4444',
+			geom=self.set_geom(row=0, column=0, pady=res.sy(3), sticky='w')
+		)
 
-		self.historyKanaLabel = self.new_Label(self.historyDetailsFrame, font = ('arial', 18), bg = '#000000', fg = '#ff4444',
-												geom = self.set_geom(row = 1, column = 0, sticky = 'w'))
+		self.historyKanaLabel = self.new_Label(
+			self.historyDetailsFrame, font=('arial', res.sy(18)), bg='#000000', fg='#ff4444',
+			geom=self.set_geom(row=1, column=0, sticky='w')
+		)
 
-		self.historyEnglishLabel = self.new_Label(self.historyDetailsFrame, font = ('arial', 14), bg = '#000000', fg = '#ff4444',
-												geom = self.set_geom(row = 2, column = 0, pady = 3, sticky = 'w'))
+		self.historyEnglishLabel = self.new_Label(
+			self.historyDetailsFrame, font=('arial', res.sy(14)), bg='#000000', fg='#ff4444',
+			geom=self.set_geom(row=2, column=0, pady=res.sy(3), sticky='w')
+		)
 
-		self.historyInputLabel = self.new_Label(self.historyDetailsFrame, font = ('arial', 18), bg = '#000000', fg = '#ff4444',
-												geom = self.set_geom(row = 3, column = 0, sticky = 'w'))
+		self.historyInputLabel = self.new_Label(
+			self.historyDetailsFrame, font=('arial', res.sy(18)), bg='#000000', fg='#ff4444',
+			geom=self.set_geom(row=3, column=0, sticky='w')
+		)
 
-		#frame containing the interactive aspect of the window, like submitting answers, moving to the next flashcard, etc.
-		self.actionWindow = self.new_Frame(self.mainWin, width = 400, height = 680, bg = self.col['action win'],
-													  geom = self.set_geom(row = 0, column = 1))
 
-		self.flashcardFrame = self.new_Frame(self.actionWindow, width = 396, height = 396, bg = self.col['action frm'],
-														 geom = self.set_geom(row = 0, column = 0, padx = 2, pady = 2, freeze = 1))
+		# frame containing the interactive aspect of the window, like submitting answers, moving to the next flashcard, etc.
+		self.actionWindow = self.new_Frame(
+			self.mainWin, width=res.sx(400), height=res.sy(680), bg=self.col['action win'],
+			geom=self.set_geom(row=0, column=1)
+		)
 
-		self.flashcardLabel = self.new_Label(self.flashcardFrame, font = ('times', 58), anchor = 'center',
-														 bg = self.col['action frm'], width = 9,
-														 geom = self.set_geom(row = 0, column = 0, ipadx = 1, pady = 152, hidden = 1))
+		self.flashcardFrame = self.new_Frame(
+			self.actionWindow, width=res.sx(396), height=res.sy(396), bg=self.col['action frm'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(2), pady=res.sy(2), freeze=1)
+		)
 
-		self.kanaFrame = self.new_Frame(self.flashcardFrame, width = 396, height = 120, bg = self.col['action frm'],
-												  geom = self.set_geom(row = 0, column = 0, freeze = 1, hidden = 1))
-		self.kanaLabel = self.new_Label(self.kanaFrame, fg = '#ffffff', bg = self.col['action frm'], font = ('arial', 18), width = 28,
-												  geom = self.set_geom(row = 0, column = 1, pady = 10, hidden = 1))
+		self.flashcardLabel = self.new_Label(
+			self.flashcardFrame, font=('times', res.sy(58)), anchor='center',
+			bg=self.col['action frm'], width=9,
+			geom=self.set_geom(row=0, column=0, ipadx=res.sx(1), pady=res.sy(152), hidden=1)
+		)
 
-		self.showKanaButton = self.new_Button(self.kanaFrame, text = 'Show', font = ('arial', 16), bg = self.col['action win'], fg = '#000000',
-											  state = DISABLED,
-											  geom = self.set_geom(row = 0, column = 0, padx = 5, hidden = 1))
+		self.kanaFrame = self.new_Frame(
+			self.flashcardFrame, width=res.sx(396), height=res.sy(120), bg=self.col['action frm'],
+			geom=self.set_geom(row=0, column=0, freeze=1, hidden=1)
+		)
+		self.kanaLabel = self.new_Label(
+			self.kanaFrame, fg='#ffffff', bg=self.col['action frm'], font=('arial', res.sy(18)), width=28,
+			geom=self.set_geom(row=0, column=1, pady=res.sy(10), hidden=1)
+		)
 
-		self.englishFrame = self.new_Frame(self.flashcardFrame, width = 396, height = 276, bg = self.col['action frm'],
-													  geom = self.set_geom(row = 1, column = 0, freeze = 1, hidden = 1))
-		self.englishLabel = self.new_Label(self.englishFrame, fg = '#ffffff', bg = self.col['action frm'], font = ('arial', 18), width = 28, justify = 'w',
-													  geom = self.set_geom(row = 0, column = 0, pady = 10, hidden = 1))
+		self.showKanaButton = self.new_Button(
+			self.kanaFrame, text='Show', font=('arial', res.sy(16)), bg=self.col['action win'], fg='#000000',
+			state=DISABLED,
+			geom=self.set_geom(row=0, column=0, padx=res.sx(5), hidden=1)
+		)
 
-		self.answerFrame = self.new_Frame(self.actionWindow, width = 396, height = 200, bg = self.col['action frm'],
-													  geom = self.set_geom(row = 1, column = 0, freeze = 1))
+		self.englishFrame = self.new_Frame(
+			self.flashcardFrame, width=res.sx(396), height=res.sy(276), bg=self.col['action frm'],
+			geom=self.set_geom(row=1, column=0, freeze=1, hidden=1)
+		)
+		self.englishLabel = self.new_Label(
+			self.englishFrame, fg='#ffffff', bg=self.col['action frm'], font=('arial', res.sy(18)), width=28, justify='w',
+			geom=self.set_geom(row=0, column=0, pady=res.sy(10), hidden=1)
+		)
 
-		self.answerMessageWin = self.new_Frame(self.answerFrame, bg = self.col['message win'],
-															geom = self.set_geom(row = 0, column = 0, padx = 10, pady = 10))
+		self.answerFrame = self.new_Frame(
+			self.actionWindow, width=res.sx(396), height=res.sy(200), bg=self.col['action frm'],
+			geom=self.set_geom(row=1, column=0, freeze=1)
+		)
 
-		self.answerMessageLabel = self.new_Label(self.answerMessageWin, font = ('arial', 30), borderwidth = 2, relief = 'solid', width = 16,
-															  bg = self.col['message bg'], fg = self.col['message fg'],
-															  geom = self.set_geom(row = 0, column = 0, padx = 1, pady = 1))
+		self.answerMessageWin = self.new_Frame(
+			self.answerFrame, bg=self.col['message win'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(10), pady=res.sy(10))
+		)
 
-		self.submitVocabEntry = self.new_Entry(self.answerFrame, font = ('arial', 32), width = 12, justify = 'center',
-															geom = self.set_geom(row = 1, column = 0, pady = 30, hidden = 1))
+		self.answerMessageLabel = self.new_Label(
+			self.answerMessageWin, font=('arial', res.sy(30)), borderwidth=2, relief='solid', width=16,
+			bg=self.col['message bg'], fg=self.col['message fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(1), pady=res.sy(1))
+		)
+
+		self.submitVocabEntry = self.new_Entry(
+			self.answerFrame, font=('arial', res.sy(32)), width=12, justify='center',
+			geom=self.set_geom(row=1, column=0, pady=res.sy(30), hidden=1)
+		)
 		self.translator = translator.Translator(self.submitVocabEntry, ['あ', 'ABC'])
 
-		self.startWritingButton = self.new_Button(self.answerFrame, font = ('arial', 20), text = 'Begin', width = 7,
-																bg = self.col['writing start bg'], fg = self.col['writing fg'],
-																command = self.start_writing_game,
-																geom = self.set_geom(row = 1, column = 0, hidden = 1, pady = 30))
 
-		self.checkWritingButton = self.new_Button(self.answerFrame, font = ('arial', 20), text = 'Check', width = 7,
-															   bg = self.col['writing bg'], fg = self.col['writing fg'],
-															   command = lambda: self.check_writing_answer(),
-															   geom = self.set_geom(row = 1, column = 0, hidden = 1, pady = 30))
+		self.startWritingButton = self.new_Button(
+			self.answerFrame, font=('arial', res.sy(20)), text='Begin', width=7,
+			bg=self.col['writing start bg'], fg=self.col['writing fg'],
+			command=self.start_writing_game,
+			geom=self.set_geom(row=1, column=0, hidden=1, pady=res.sy(30))
+		)
 
-		self.checkWritingFrame = self.new_Frame(self.answerFrame, bg = self.col['action frm'],
-															 geom = self.set_geom(row = 1, column = 0, pady = 30, hidden = 1))
+		self.checkWritingButton = self.new_Button(
+			self.answerFrame, font=('arial', res.sy(20)), text='Check', width=7,
+			bg=self.col['writing bg'], fg=self.col['writing fg'],
+			command=lambda: self.check_writing_answer(),
+			geom=self.set_geom(row=1, column=0, hidden=1, pady=res.sy(30))
+		)
 
-		self.correctWritingButton = self.new_Button(self.checkWritingFrame, font = ('arial', 20), text = '✓', width = 3,
-																  bg = self.col['correct button bg'], fg = '#ffffff',
-																  command = lambda: self.tabulate_writing(correct = True),
-																  geom = self.set_geom(row = 1, column = 0, padx = 10, hidden = 1))
+		self.checkWritingFrame = self.new_Frame(
+			self.answerFrame, bg=self.col['action frm'],
+			geom=self.set_geom(row=1, column=0, pady=res.sy(30), hidden=1)
+		)
 
-		self.wrongWritingButton = self.new_Button(self.checkWritingFrame, font = ('arial', 20), text = '❌', width = 3,
-																bg = self.col['wrong button bg'], fg = '#ffffff',
-																command = lambda: self.tabulate_writing(correct = False),
-																geom = self.set_geom(row = 1, column = 1, padx = 10, hidden = 1))
+		self.correctWritingButton = self.new_Button(
+			self.checkWritingFrame, font=('arial', res.sy(20)), text='✓', width=3,
+			bg=self.col['correct button bg'], fg='#ffffff',
+			command=lambda: self.tabulate_writing(correct=True),
+			geom=self.set_geom(row=1, column=0, padx=res.sx(10), hidden=1)
+		)
 
-		self.endButtonsFrame = self.new_Frame(self.answerFrame, bg = self.col['action frm'],
-														  geom = self.set_geom(row = 1, column = 0, pady = 34, hidden = 1))
+		self.wrongWritingButton = self.new_Button(
+			self.checkWritingFrame, font=('arial', res.sy(20)), text='❌', width=3,
+			bg=self.col['wrong button bg'], fg='#ffffff',
+			command=lambda: self.tabulate_writing(correct=False),
+			geom=self.set_geom(row=1, column=1, padx=res.sx(10), hidden=1)
+		)
 
-		self.retryButton = self.new_Button(self.endButtonsFrame, font = ('arial', 18), text = 'Retry', width = 7,
-													  bg = self.col['retry bg'], fg = self.col['end fg'], 
-													  command = self.retry_game,
-													  geom = self.set_geom(row = 0, column = 0,  padx = 25, hidden = 1))
+		self.endButtonsFrame = self.new_Frame(
+			self.answerFrame, bg=self.col['action frm'],
+			geom=self.set_geom(row=1, column=0, pady=res.sy(34), hidden=1)
+		)
 
-		self.returnButton = self.new_Button(self.endButtonsFrame, font = ('arial', 18), text = 'Return', width = 7,
-													  bg = self.col['return bg'], fg = self.col['end fg'], 
-													  command = self.exit_game,
-													  geom = self.set_geom(row = 0, column = 1,  padx = 25, hidden = 1))
+		self.retryButton = self.new_Button(
+			self.endButtonsFrame, font=('arial', res.sy(18)), text='Retry', width=7,
+			bg=self.col['retry bg'], fg=self.col['end fg'],
+			command=self.retry_game,
+			geom=self.set_geom(row=0, column=0, padx=res.sx(25), hidden=1)
+		)
+
+		self.returnButton = self.new_Button(
+			self.endButtonsFrame, font=('arial', res.sy(18)), text='Return', width=7,
+			bg=self.col['return bg'], fg=self.col['end fg'],
+			command=self.exit_game,
+			geom=self.set_geom(row=0, column=1, padx=res.sx(25), hidden=1)
+		)
 
 
-		self.buttonsFrame = self.new_Frame(self.actionWindow, width = 396, height = 76, bg = self.col['action frm'],
-													  geom = self.set_geom(row = 2, column = 0, pady = 2, freeze = 1))
 
-		self.hintButton = self.new_Button(self.buttonsFrame, text = 'Hint', font = ('arial', 16), width = 5,
-													 bg = self.col['buttons bg'], fg = self.col['buttons fg'],
-													 geom = self.set_geom(row = 0, column = 0, padx = 47, pady = 18))
+		self.buttonsFrame = self.new_Frame(
+			self.actionWindow, width=res.sx(396), height=res.sy(76), bg=self.col['action frm'],
+			geom=self.set_geom(row=2, column=0, pady=res.sy(2), freeze=1)
+		)
 
-		self.skipButton = self.new_Button(self.buttonsFrame, text = 'Skip', font = ('arial', 16), width = 5,
-													 bg = self.col['buttons bg'], fg = self.col['buttons fg'],
-													 geom = self.set_geom(row = 0, column = 1))
+		self.hintButton = self.new_Button(
+			self.buttonsFrame, text='Hint', font=('arial', res.sy(16)), width=5,
+			bg=self.col['buttons bg'], fg=self.col['buttons fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(47), pady=res.sy(18))
+		)
 
-		self.quitButton = self.new_Button(self.buttonsFrame, text = 'Quit', font = ('arial', 16), width = 5,
-													 bg = self.col['buttons bg'], fg = self.col['buttons fg'],
-													 command = self.end_game,
-													 geom = self.set_geom(row = 0, column = 2, padx = 47))
+		self.skipButton = self.new_Button(
+			self.buttonsFrame, text='Skip', font=('arial', res.sy(16)), width=5,
+			bg=self.col['buttons bg'], fg=self.col['buttons fg'],
+			geom=self.set_geom(row=0, column=1)
+		)
 
-		#frame for monitoring and updating your current performance. contains score counters, time remaining, lives, etc.
-		self.perfWindow = self.new_Frame(self.mainWin, width = 400, height = 680, bg = self.col['perf win'],
-													geom = self.set_geom(row = 0, column = 2, padx = 5))
+		self.quitButton = self.new_Button(
+			self.buttonsFrame, text='Quit', font=('arial', res.sy(16)), width=5,
+			bg=self.col['buttons bg'], fg=self.col['buttons fg'],
+			command=self.end_game,
+			geom=self.set_geom(row=0, column=2, padx=res.sx(47))
+		)
 
-		self.metersFrame = self.new_Frame(self.perfWindow, width = 250, height = 300, bg = self.col['perf frm'],
-													 geom = self.set_geom(row = 0, column = 0, padx = 1, pady = 2, freeze = 1, sticky = 'e'))
 
-		self.checkKanjiLabel = self.new_Label(self.metersFrame, font = ('times', 40), bg = self.col['perf frm'], fg = '#ffffff', width = 8,
-														  geom = self.set_geom(row = 0, column = 0, pady = 113, ipadx = 2, hidden = 1))
+		# frame for monitoring and updating performance
+		self.perfWindow = self.new_Frame(
+			self.mainWin, width=res.sx(400), height=res.sy(680), bg=self.col['perf win'],
+			geom=self.set_geom(row=0, column=2, padx=res.sx(5))
+		)
 
-		self.clockFrame = self.new_Frame(self.perfWindow, width = 144, height = 300, bg = self.col['perf frm'],
-													geom = self.set_geom(row = 0, column = 1, padx = 1, freeze = 1, sticky = 'w'))
+		self.metersFrame = self.new_Frame(
+			self.perfWindow, width=res.sx(250), height=res.sy(300), bg=self.col['perf frm'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(1), pady=res.sy(2), freeze=1, sticky='e')
+		)
 
-		self.clockCanvas = self.new_Canvas(self.clockFrame, width = 140, height = 140, bg = self.col['perf frm'],
-													  bd = 0, highlightthickness = 0, relief = 'ridge',
-													  geom = self.set_geom(row = 0, column = 0, padx = 2, freeze = 1))
-		self.timeLabel = self.new_Label(self.clockFrame, font = ('arial', 16), bg = self.col['perf frm'], fg = self.col['timer fg'],
-												  geom = self.set_geom(row = 1, column = 0))
+		self.checkKanjiLabel = self.new_Label(
+			self.metersFrame, font=('times', res.sy(40)), bg=self.col['perf frm'], fg='#ffffff', width=8,
+			geom=self.set_geom(row=0, column=0, pady=res.sy(113), ipadx=res.sx(2), hidden=1)
+		)
 
-		self.livesFrame = self.new_Frame(self.perfWindow, width = 396, height = 94, bg = self.col['perf frm'],
-													geom = self.set_geom(row = 1, column = 0, padx = 2, columnspan = 2, freeze = 1))
+		self.clockFrame = self.new_Frame(
+			self.perfWindow, width=res.sx(144), height=res.sy(300), bg=self.col['perf frm'],
+			geom=self.set_geom(row=0, column=1, padx=res.sx(1), freeze=1, sticky='w')
+		)
 
-		self.livesLabel = self.new_Label(self.livesFrame, bg = self.col['perf frm'], fg = self.col['lives fg'], font = ('arial', 20),
-													geom = self.set_geom(row = 0, column = 0, padx = 70, pady = 28, hidden = 1))
+		self.clockCanvas = self.new_Canvas(
+			self.clockFrame, width=res.sx(140), height=res.sy(140), bg=self.col['perf frm'],
+			bd=0, highlightthickness=0, relief='ridge',
+			geom=self.set_geom(row=0, column=0, padx=res.sx(2), freeze=1)
+		)
+		self.timeLabel = self.new_Label(
+			self.clockFrame, font=('arial', res.sy(16)), bg=self.col['perf frm'], fg=self.col['timer fg'],
+			geom=self.set_geom(row=1, column=0)
+		)
 
-		self.progressLabel = self.new_Label(self.livesFrame, text = 'Progress: ', bg = self.col['perf frm'], fg = self.col['lives fg'], font = ('arial', 20), anchor = 'w',
-														geom = self.set_geom(row = 0, column = 0, padx = 50, pady = 28, hidden = 1))
+		self.livesFrame = self.new_Frame(
+			self.perfWindow, width=res.sx(396), height=res.sy(94), bg=self.col['perf frm'],
+			geom=self.set_geom(row=1, column=0, padx=res.sx(2), columnspan=2, freeze=1)
+		)
 
-		self.statsFrame = self.new_Frame(self.perfWindow, width = 396, height = 278, bg = self.col['perf frm'],
-													geom = self.set_geom(row = 2, column = 0, pady = 2, columnspan = 2, freeze = 1))
+		self.livesLabel = self.new_Label(
+			self.livesFrame, bg=self.col['perf frm'], fg=self.col['lives fg'], font=('arial', res.sy(20)),
+			geom=self.set_geom(row=0, column=0, padx=res.sx(70), pady=res.sy(28), hidden=1)
+		)
 
-		self.correctFrame = self.new_Frame(self.statsFrame, bg = self.col['perf frm'],
-													  geom = self.set_geom(row = 0, column = 0, padx = 10, pady = 5, sticky = 'w'))
-		self.correctTitle = self.new_Label(self.correctFrame, text = 'Correct:', font = ('arial', 18), 
-													  bg = self.col['perf frm'], fg = self.col['stats fg'],
-													  geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 3, sticky = 'w'))
-		self.correctCounterLabel = self.new_Label(self.correctFrame, text = '0', font = ('arial', 20), width = 7, anchor = 'e',
-															 bg = self.col['perf frm'], fg = self.col['stats fg'],
-													 		 geom = self.set_geom(row = 1, column = 0))
+		self.progressLabel = self.new_Label(
+			self.livesFrame, text='Progress: ', bg=self.col['perf frm'], fg=self.col['lives fg'],
+			font=('arial', res.sy(20)), anchor='w',
+			geom=self.set_geom(row=0, column=0, padx=res.sx(50), pady=res.sy(28), hidden=1)
+		)
 
-		self.wrongFrame = self.new_Frame(self.statsFrame, bg = self.col['perf frm'],
-													geom = self.set_geom(row = 1, column = 0, padx = 10, pady = 5, sticky = 'w'))
-		self.wrongTitle = self.new_Label(self.wrongFrame, text = 'Wrong:', font = ('arial', 18),
-											 		bg = self.col['perf frm'], fg = self.col['stats fg'],
-											 		geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 3, sticky = 'w'))
-		self.wrongCounterLabel = self.new_Label(self.wrongFrame, text = '0', font = ('arial', 20), width = 7, anchor = 'e',
-															 bg = self.col['perf frm'], fg = self.col['stats fg'],
-													  		 geom = self.set_geom(row = 1, column = 0))
+		self.statsFrame = self.new_Frame(
+			self.perfWindow, width=res.sx(396), height=res.sy(278), bg=self.col['perf frm'],
+			geom=self.set_geom(row=2, column=0, pady=res.sy(2), columnspan=2, freeze=1)
+		)
 
-		self.totalFrame = self.new_Frame(self.statsFrame, bg = self.col['perf frm'],
-													geom = self.set_geom(row = 2, column = 0, padx = 10, pady = 5, sticky = 'w'))
-		self.totalTitle = self.new_Label(self.totalFrame, text = 'Total:', font = ('arial', 18),
-											 		bg = self.col['perf frm'], fg = self.col['stats fg'],
-											 		geom = self.set_geom(row = 0, column = 0, padx = 3, pady = 3, sticky = 'w'))
-		self.totalCounterLabel = self.new_Label(self.totalFrame, text = '0', font = ('arial', 20), width = 7, anchor = 'e',
-															 bg = self.col['perf frm'], fg = self.col['stats fg'],
-													  		 geom = self.set_geom(row = 1, column = 0))
+		self.correctFrame = self.new_Frame(
+			self.statsFrame, bg=self.col['perf frm'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(10), pady=res.sy(5), sticky='w')
+		)
+		self.correctTitle = self.new_Label(
+			self.correctFrame, text='Correct:', font=('arial', res.sy(18)),
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(3), pady=res.sy(3), sticky='w')
+		)
+		self.correctCounterLabel = self.new_Label(
+			self.correctFrame, text='0', font=('arial', res.sy(20)), width=7, anchor='e',
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=1, column=0)
+		)
 
-		self.accuracyFrame = self.new_Frame(self.statsFrame, bg = self.col['perf frm'],
-														geom = self.set_geom(row = 1, column = 1, rowspan = 2, padx = 15))
-		self.accuracyTitle = self.new_Label(self.accuracyFrame, text = 'Accuracy:', font = ('arial', 20), anchor = 's',
-														bg = self.col['perf frm'], fg = self.col['stats fg'],
-														geom = self.set_geom(row = 0, column = 0, padx = 50, pady = 10, ipady = 35))
-		self.accuracyCounterLabel = self.new_Label(self.accuracyFrame, text = '0.00 %', font = ('arial', 28),
-																 bg = self.col['perf frm'], fg = self.col['stats fg'],
-																 geom = self.set_geom(row = 1, column = 0, sticky = 'e'))
+
+		self.wrongFrame = self.new_Frame(
+			self.statsFrame, bg=self.col['perf frm'],
+			geom=self.set_geom(row=1, column=0, padx=res.sx(10), pady=res.sy(5), sticky='w')
+		)
+		self.wrongTitle = self.new_Label(
+			self.wrongFrame, text='Wrong:', font=('arial', res.sy(18)),
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(3), pady=res.sy(3), sticky='w')
+		)
+		self.wrongCounterLabel = self.new_Label(
+			self.wrongFrame, text='0', font=('arial', res.sy(20)), width=7, anchor='e',
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=1, column=0)
+		)
+
+		self.totalFrame = self.new_Frame(
+			self.statsFrame, bg=self.col['perf frm'],
+			geom=self.set_geom(row=2, column=0, padx=res.sx(10), pady=res.sy(5), sticky='w')
+		)
+		self.totalTitle = self.new_Label(
+			self.totalFrame, text='Total:', font=('arial', res.sy(18)),
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(3), pady=res.sy(3), sticky='w')
+		)
+		self.totalCounterLabel = self.new_Label(
+			self.totalFrame, text='0', font=('arial', res.sy(20)), width=7, anchor='e',
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=1, column=0)
+		)
+
+		self.accuracyFrame = self.new_Frame(
+			self.statsFrame, bg=self.col['perf frm'],
+			geom=self.set_geom(row=1, column=1, rowspan=2, padx=res.sx(15))
+		)
+		self.accuracyTitle = self.new_Label(
+			self.accuracyFrame, text='Accuracy:', font=('arial', res.sy(20)), anchor='s',
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=0, column=0, padx=res.sx(50), pady=res.sy(10), ipady=res.sy(35))
+		)
+		self.accuracyCounterLabel = self.new_Label(
+			self.accuracyFrame, text='0.00 %', font=('arial', res.sy(28)),
+			bg=self.col['perf frm'], fg=self.col['stats fg'],
+			geom=self.set_geom(row=1, column=0, sticky='e')
+		)
+
 
 
 	def start_new_game(self, allKanji, **kwargs):
@@ -780,7 +898,7 @@ class Game_Interface(Window):
 	def record_mistakes(self, input_, current):
 		num = len(self.historyFrame.winfo_children())
 		label = Label(self.historyFrame, text = current[0], font = ('times', 30), bg = '#000000', fg = '#ff4444')
-		padding = 3 if num % 2 == 0 else 0
+		padding = res.sy(3) if num % 2 == 0 else 0
 		label.grid(row = num // 8, column = num % 8, padx = padding, pady = padding)
 
 		label.bind('<Enter>', lambda *args, current = current, input_ = input_: self.display_mistake_details(current, input_))
